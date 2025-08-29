@@ -29,8 +29,8 @@ pip install drf-spectacular-auth
 
 ```python
 INSTALLED_APPS = [
+    'drf_spectacular_auth',  # Add 'drf_spectacular_auth' before 'drf_spectacular'
     'drf_spectacular',
-    'drf_spectacular_auth',  # Add this
     # ... your other apps
 ]
 

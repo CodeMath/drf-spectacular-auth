@@ -11,8 +11,7 @@
       *, *:after, *:before { box-sizing: inherit; }
       body { background: #fafafa; margin: 0; }
     </style>
-    
-    <!-- Inject auth panel styles -->
+    <!-- Auth panel styles - directly injected -->
     {{ auth_panel_html|safe }}
   </head>
   <body>
@@ -38,7 +37,7 @@
     </script>
     {% endif %}
     
-    <!-- Inject auth panel JavaScript -->
+    <!-- Auth panel JavaScript - directly injected -->
     <script>
     {{ auth_panel_js|safe }}
     </script>
