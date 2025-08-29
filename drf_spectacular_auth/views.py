@@ -32,7 +32,7 @@ class SpectacularAuthSwaggerView(SpectacularSwaggerView):
     Extended SpectacularSwaggerView with authentication panel
     """
 
-    template_name = "drf_spectacular/swagger_ui.html"
+    template_name = "drf_spectacular_auth/swagger_ui.html"
 
     def get_context_data(self, **kwargs):
         try:
