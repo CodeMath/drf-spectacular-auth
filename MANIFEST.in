@@ -1,0 +1,6 @@
+include README.md
+include LICENSE
+recursive-include drf_spectacular_auth/templates *
+recursive-include drf_spectacular_auth/static *
+recursive-exclude * __pycache__
+recursive-exclude * *.py[co]
