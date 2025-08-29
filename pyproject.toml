@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "drf-spectacular-auth"
-version = "1.2.0"
+version = "1.2.1"
 description = "Enhanced Authentication UI for DRF Spectacular with AWS Cognito support and Django integration"
 readme = "README.md"
 requires-python = ">=3.8"
