@@ -1,0 +1,15 @@
+{% extends 'drf_spectacular/swagger_ui.html' %}
+{% load static %}
+
+{% block head %}
+{{ block.super }}
+{{ auth_panel_html|safe }}
+{% endblock %}
+
+{% block body %}
+{{ block.super }}
+
+<script>
+{{ auth_panel_js|safe }}
+</script>
+{% endblock %}
