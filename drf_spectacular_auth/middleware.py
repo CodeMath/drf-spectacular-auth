@@ -5,10 +5,9 @@ Middleware for DRF Spectacular Auth
 import logging
 from typing import Optional
 
-from django.contrib.auth import authenticate, login
-from django.contrib.auth.models import AnonymousUser
+from django.contrib.auth import login
 from django.http import HttpRequest, HttpResponse
-from django.urls import resolve, reverse
+from django.urls import resolve
 from django.utils.deprecation import MiddlewareMixin
 
 from .conf import auth_settings
