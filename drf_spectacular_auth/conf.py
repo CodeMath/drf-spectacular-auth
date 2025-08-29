@@ -6,6 +6,7 @@ DEFAULTS = {
     # AWS Cognito Settings
     "COGNITO_REGION": "us-east-1",
     "COGNITO_CLIENT_ID": None,  # Required
+    "COGNITO_CLIENT_SECRET": None,  # Optional - for private clients only
     # API Endpoints
     "LOGIN_ENDPOINT": "/api/auth/login/",
     "LOGOUT_ENDPOINT": "/api/auth/logout/",

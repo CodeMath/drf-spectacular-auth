@@ -2,6 +2,9 @@
 AWS Cognito authentication provider
 """
 
+import base64
+import hashlib
+import hmac
 import logging
 from typing import Any, Dict
 
@@ -22,11 +25,39 @@ class CognitoAuthProvider(AuthProvider):
     def __init__(self):
         self.region = auth_settings.COGNITO_REGION
         self.client_id = auth_settings.COGNITO_CLIENT_ID
+        self.client_secret = auth_settings.COGNITO_CLIENT_SECRET
 
         if not self.client_id:
             raise ValueError("COGNITO_CLIENT_ID is required for CognitoAuthProvider")
 
         self.client = boto3.client("cognito-idp", region_name=self.region)
+
+    def _get_secret_hash(self, username: str) -> str:
+        """
+        Calculate SECRET_HASH for Cognito private client authentication
+
+        Args:
+            username: The username (email) for authentication
+
+        Returns:
+            str: The calculated SECRET_HASH
+
+        Raises:
+            ValueError: If client_secret is not configured
+        """
+        if not self.client_secret:
+            raise ValueError("CLIENT_SECRET is required for SECRET_HASH calculation")
+
+        message = username + self.client_id
+        secret_hash = base64.b64encode(
+            hmac.new(
+                self.client_secret.encode(),
+                message.encode(),
+                digestmod=hashlib.sha256,
+            ).digest()
+        ).decode()
+
+        return secret_hash
 
     def authenticate(self, credentials: Dict[str, Any]) -> Dict[str, Any]:
         """
@@ -39,14 +70,24 @@ class CognitoAuthProvider(AuthProvider):
             raise AuthenticationError("Email and password are required")
 
         try:
+            # Prepare authentication parameters
+            auth_parameters = {
+                "USERNAME": email,
+                "PASSWORD": password,
+            }
+
+            # Add SECRET_HASH if client secret is configured (Private Client)
+            if self.client_secret:
+                auth_parameters["SECRET_HASH"] = self._get_secret_hash(email)
+                logger.debug(f"Using Private Client authentication for user: {email}")
+            else:
+                logger.debug(f"Using Public Client authentication for user: {email}")
+
             # InitiateAuth with Cognito
             response = self.client.initiate_auth(
                 ClientId=self.client_id,
                 AuthFlow="USER_PASSWORD_AUTH",
-                AuthParameters={
-                    "USERNAME": email,
-                    "PASSWORD": password,
-                },
+                AuthParameters=auth_parameters,
             )
 
             # Extract tokens from response
@@ -146,17 +187,35 @@ class CognitoAuthProvider(AuthProvider):
 
         return True
 
-    def refresh_token(self, refresh_token: str) -> Dict[str, Any]:
+    def refresh_token(self, refresh_token: str, username: str = None) -> Dict[str, Any]:
         """
         Refresh access token using Cognito refresh token
+
+        Args:
+            refresh_token: The refresh token
+            username: Username (required if client secret is used)
         """
         try:
+            # Prepare authentication parameters
+            auth_parameters = {
+                "REFRESH_TOKEN": refresh_token,
+            }
+
+            # Add SECRET_HASH if client secret is configured (Private Client)
+            if self.client_secret:
+                if not username:
+                    raise ValueError(
+                        "Username is required for refresh token with client secret"
+                    )
+                auth_parameters["SECRET_HASH"] = self._get_secret_hash(username)
+                logger.debug("Using Private Client for token refresh")
+            else:
+                logger.debug("Using Public Client for token refresh")
+
             response = self.client.initiate_auth(
                 ClientId=self.client_id,
                 AuthFlow="REFRESH_TOKEN_AUTH",
-                AuthParameters={
-                    "REFRESH_TOKEN": refresh_token,
-                },
+                AuthParameters=auth_parameters,
             )
 
             auth_result = response["AuthenticationResult"]

@@ -2,6 +2,7 @@
 Django settings for example_project.
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -143,6 +144,7 @@ DRF_SPECTACULAR_AUTH = {
     # AWS Cognito 설정
     'COGNITO_REGION': 'ap-northeast-2',  # 서울 리전
     'COGNITO_CLIENT_ID': 'your-cognito-client-id-here',  # 실제 값으로 변경 필요
+    'COGNITO_CLIENT_SECRET': os.getenv('COGNITO_CLIENT_SECRET'),  # Private client인 경우에만 설정
     
     # UI 설정
     'PANEL_POSITION': 'top-right',      # 인증 패널 위치

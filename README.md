@@ -37,6 +37,7 @@ INSTALLED_APPS = [
 DRF_SPECTACULAR_AUTH = {
     'COGNITO_REGION': 'your-aws-region',
     'COGNITO_CLIENT_ID': 'your-cognito-client-id',
+    'COGNITO_CLIENT_SECRET': 'your-client-secret',  # Private client인 경우에만 필요
 }
 ```
 
@@ -76,6 +77,33 @@ python manage.py runserver
 
 ## ⚙️ Configuration
 
+### AWS Cognito Client Types
+
+**Public Client** (기본):
+- Client Secret이 필요하지 않음
+- `COGNITO_CLIENT_SECRET` 설정 불필요
+- 대부분의 웹 애플리케이션에 적합
+
+**Private Client** (보안 강화):
+- Client Secret 필요
+- `COGNITO_CLIENT_SECRET` 설정 필수
+- SECRET_HASH 자동 계산 및 적용
+
+```python
+# Public Client (기본)
+DRF_SPECTACULAR_AUTH = {
+    'COGNITO_REGION': 'ap-northeast-2',
+    'COGNITO_CLIENT_ID': 'your-public-client-id',
+}
+
+# Private Client (보안 강화)
+DRF_SPECTACULAR_AUTH = {
+    'COGNITO_REGION': 'ap-northeast-2',
+    'COGNITO_CLIENT_ID': 'your-private-client-id',
+    'COGNITO_CLIENT_SECRET': os.getenv('COGNITO_CLIENT_SECRET'),  # 환경변수 사용 권장
+}
+```
+
 ### Full Configuration Options
 
 ```python
@@ -83,6 +111,7 @@ DRF_SPECTACULAR_AUTH = {
     # AWS Cognito Settings
     'COGNITO_REGION': 'ap-northeast-2',
     'COGNITO_CLIENT_ID': 'your-client-id',
+    'COGNITO_CLIENT_SECRET': None,  # Private client인 경우에만 설정 (환경변수 사용 권장)
     
     # API Endpoints
     'LOGIN_ENDPOINT': '/api/auth/login/',
