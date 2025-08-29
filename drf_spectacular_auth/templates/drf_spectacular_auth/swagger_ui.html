@@ -1,45 +1,232 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>{{ title|default:"Swagger API" }}</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    {% if favicon_href %}<link rel="icon" href="{{ favicon_href }}">{% endif %}
-    <link rel="stylesheet" href="{{ swagger_ui_css }}">
-    <style>
-      html { box-sizing: border-box; overflow-y: scroll; }
-      *, *:after, *:before { box-sizing: inherit; }
-      body { background: #fafafa; margin: 0; }
-    </style>
-    <!-- Auth panel styles - directly injected -->
-    {{ auth_panel_html|safe }}
-  </head>
-  <body>
-    <div id="swagger-ui"></div>
-    <script src="{{ swagger_ui_bundle }}"></script>
-    <script src="{{ swagger_ui_standalone }}"></script>
-    {% if script_url %}
-    <script src="{{ script_url }}"></script>
+{% extends 'drf_spectacular/swagger_ui.html' %}
+{% load static %}
+
+{% block head %}
+{{ block.super }}
+<style>
+/* DRF Spectacular Auth Panel Styles */
+.drf-auth-panel {
+    position: fixed;
+    {% if panel_position == 'top-left' %}
+        top: 20px;
+        left: 20px;
+    {% elif panel_position == 'top-right' %}
+        top: 20px;
+        right: 20px;
+    {% elif panel_position == 'bottom-left' %}
+        bottom: 20px;
+        left: 20px;
+    {% elif panel_position == 'bottom-right' %}
+        bottom: 20px;
+        right: 20px;
     {% else %}
-    <script>
-    window.onload = function() {
-      const ui = SwaggerUIBundle({
-        url: '{{ schema_url|default:"/api/schema/" }}',
-        dom_id: '#swagger-ui',
-        presets: [
-          SwaggerUIBundle.presets.apis,
-          SwaggerUIStandalonePreset
-        ],
-        layout: "StandaloneLayout"
-      });
-      window.ui = ui;
-    };
-    </script>
+        top: 20px;
+        right: 20px;
     {% endif %}
+    background: {{ theme.BACKGROUND_COLOR }};
+    border: 1px solid #ddd;
+    border-radius: {{ theme.BORDER_RADIUS }};
+    padding: 20px;
+    box-shadow: {{ theme.SHADOW }};
+    z-index: 9999;
+    min-width: 300px;
+    font-family: {{ theme.FONT_FAMILY }};
+}
+
+.drf-auth-panel h3 {
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 12px;
+    color: #333;
+    margin-top: 0;
+}
+
+.drf-auth-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.drf-auth-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: {{ theme.ERROR_COLOR }};
+}
+
+.drf-auth-indicator.authenticated {
+    background: {{ theme.SUCCESS_COLOR }};
+}
+
+.drf-auth-text {
+    flex: 1;
+}
+
+.drf-auth-button {
+    border: none;
+    padding: 4px 8px;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 11px;
+    margin-left: 4px;
+}
+
+.drf-auth-button-copy {
+    background: {{ theme.SUCCESS_COLOR }};
+    color: white;
+    display: none;
+}
+
+.drf-auth-button-logout {
+    background: {{ theme.ERROR_COLOR }};
+    color: white;
+    display: none;
+}
+
+.drf-auth-message {
+    padding: 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    text-align: center;
+    margin-bottom: 12px;
+    display: none;
+}
+
+.drf-auth-message.success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.drf-auth-message.error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.drf-auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.drf-auth-input {
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.drf-auth-button-primary {
+    background: {{ theme.PRIMARY_COLOR }};
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.drf-auth-button-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+</style>
+{% endblock %}
+
+{% block body %}
+{{ block.super }}
+
+<!-- DRF Spectacular Auth Panel -->
+<div id="drf-auth-panel" class="drf-auth-panel">
+    <h3>
+        🔐 
+        {% if language == 'ko' %}
+            Cognito 로그인
+        {% elif language == 'ja' %}
+            Cognito ログイン
+        {% else %}
+            Cognito Login
+        {% endif %}
+    </h3>
     
-    <!-- Auth panel JavaScript - directly injected -->
-    <script>
-    {{ auth_panel_js|safe }}
-    </script>
-  </body>
-</html>
+    <div id="drf-auth-status" class="drf-auth-status">
+        <div id="drf-auth-indicator" class="drf-auth-indicator"></div>
+        <span id="drf-auth-text" class="drf-auth-text">
+            {% if language == 'ko' %}
+                미인증
+            {% elif language == 'ja' %}
+                未認証
+            {% else %}
+                Unauthenticated
+            {% endif %}
+        </span>
+        <button id="drf-copy-token-btn" class="drf-auth-button drf-auth-button-copy">
+            📋 
+            {% if language == 'ko' %}
+                토큰 복사
+            {% elif language == 'ja' %}
+                トークンコピー
+            {% else %}
+                Copy Token
+            {% endif %}
+        </button>
+        <button id="drf-logout-btn" class="drf-auth-button drf-auth-button-logout">
+            {% if language == 'ko' %}
+                로그아웃
+            {% elif language == 'ja' %}
+                ログアウト
+            {% else %}
+                Logout
+            {% endif %}
+        </button>
+    </div>
+    
+    <div id="drf-status-message" class="drf-auth-message"></div>
+    
+    <form id="drf-login-form" class="drf-auth-form">
+        <input 
+            type="email" 
+            id="drf-email" 
+            class="drf-auth-input"
+            {% if language == 'ko' %}
+                placeholder="이메일"
+            {% elif language == 'ja' %}
+                placeholder="メール"
+            {% else %}
+                placeholder="Email"
+            {% endif %}
+            required 
+        >
+        <input 
+            type="password" 
+            id="drf-password" 
+            class="drf-auth-input"
+            {% if language == 'ko' %}
+                placeholder="패스워드"
+            {% elif language == 'ja' %}
+                placeholder="パスワード"
+            {% else %}
+                placeholder="Password"
+            {% endif %}
+            required 
+        >
+        <button type="submit" id="drf-login-btn" class="drf-auth-button-primary">
+            {% if language == 'ko' %}
+                로그인
+            {% elif language == 'ja' %}
+                ログイン
+            {% else %}
+                Login
+            {% endif %}
+        </button>
+    </form>
+</div>
+
+<script>
+{{ auth_panel_js|safe }}
+</script>
+{% endblock %}
