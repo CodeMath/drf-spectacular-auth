@@ -35,6 +35,10 @@ DEFAULTS = {
     "TOKEN_STORAGE": "localStorage",  # localStorage, sessionStorage
     "CSRF_PROTECTION": True,
     "TOKEN_REFRESH": False,
+    # User Management
+    "AUTO_CREATE_USERS": False,  # Auto-create users from successful authentication
+    "CREATE_TEMP_USER": True,  # Create temporary users for documentation access
+    "REQUIRE_AUTHENTICATION": False,  # Require auth to access Swagger UI
     # Extensibility
     "CUSTOM_AUTH_PROVIDERS": [],
     "CUSTOM_TEMPLATES": {},

@@ -1,0 +1,103 @@
+{% extends "drf_spectacular/swagger-ui.html" %}
+{% load static %}
+
+{% block head %}
+{{ block.super }}
+<!-- DRF Spectacular Auth Panel Styles -->
+{{ auth_panel_html|safe }}
+{% endblock %}
+
+{% block script_settings %}
+{{ block.super }}
+<!-- Enhanced settings with auth integration -->
+<script>
+// Original swagger settings with auth enhancements
+const originalSettings = {{ settings|safe }};
+const authSettings = {{ auth_settings|safe }};
+const csrfToken = "{{ csrf_token }}";
+const loginUrl = "{{ login_url }}";
+
+// Merge settings
+window.swaggerSettings = {
+    ...originalSettings,
+    // Add auth-specific interceptors
+    requestInterceptor: function(request) {
+        // Apply original interceptor if exists
+        if (originalSettings.requestInterceptor) {
+            request = originalSettings.requestInterceptor(request);
+        }
+        
+        // Add auth token if available
+        const authToken = localStorage.getItem('spectacular_auth_token');
+        if (authToken) {
+            request.headers = request.headers || {};
+            request.headers['Authorization'] = 'Bearer ' + authToken;
+        }
+        
+        // Add CSRF token for POST requests
+        if (request.method && request.method.toUpperCase() !== 'GET') {
+            request.headers = request.headers || {};
+            request.headers['X-CSRFToken'] = csrfToken;
+        }
+        
+        return request;
+    },
+    
+    responseInterceptor: function(response) {
+        // Apply original interceptor if exists
+        if (originalSettings.responseInterceptor) {
+            response = originalSettings.responseInterceptor(response);
+        }
+        
+        // Handle auth-related responses
+        if (response.status === 401) {
+            // Token might be expired, show auth panel
+            const authPanel = document.querySelector('.auth-panel');
+            if (authPanel) {
+                authPanel.style.display = 'block';
+            }
+        }
+        
+        return response;
+    }
+};
+</script>
+{% endblock %}
+
+{% block script_init %}
+<!-- Enhanced SwaggerUI initialization -->
+<script>
+window.onload = function() {
+    const ui = SwaggerUIBundle({
+        url: '{{ schema_url|default:"/api/schema/" }}',
+        dom_id: '#swagger-ui',
+        presets: [
+            SwaggerUIBundle.presets.apis,
+            SwaggerUIStandalonePreset
+        ],
+        layout: "StandaloneLayout",
+        ...window.swaggerSettings
+    });
+    
+    window.ui = ui;
+    
+    // Initialize auth panel after UI loads
+    if (typeof initAuthPanel === 'function') {
+        initAuthPanel(ui);
+    }
+};
+</script>
+
+<!-- Auth panel JavaScript -->
+<script>
+{{ auth_panel_js|safe }}
+</script>
+{% endblock %}
+
+{% block body %}
+{{ block.super }}
+<!-- Auth status indicator -->
+<div id="auth-status" style="position: fixed; top: 10px; right: 10px; z-index: 9999;">
+    <!-- Will be populated by auth panel JS -->
+</div>
+{% endblock %}
