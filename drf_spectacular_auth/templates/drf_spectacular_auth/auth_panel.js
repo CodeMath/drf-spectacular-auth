@@ -10,6 +10,7 @@
         autoAuthorize: {{ auth_settings.AUTO_AUTHORIZE|yesno:"true,false" }},
         showCopyButton: {{ auth_settings.SHOW_COPY_BUTTON|yesno:"true,false" }},
         tokenStorage: '{{ auth_settings.TOKEN_STORAGE }}',
+        useHttpOnlyCookie: {{ auth_settings.USE_HTTPONLY_COOKIE|yesno:"true,false" }},
         theme: {{ theme|safe }}
     };
 
@@ -81,6 +82,43 @@
             : MESSAGES.en[key];
     }
 
+    // Cookie utility functions
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) {
+            return decodeURIComponent(parts.pop().split(';').shift());
+        }
+        return null;
+    }
+
+    function getTokenFromStorage() {
+        // Try HttpOnly cookie approach first (if enabled)
+        if (CONFIG.useHttpOnlyCookie) {
+            // HttpOnly cookie cannot be accessed by JavaScript
+            // Token is handled server-side, so we don't need it here
+            // Just check if user_email cookie exists to verify auth status
+            return getCookie('user_email') ? 'httponly_token' : null;
+        }
+        
+        // Fallback to localStorage/sessionStorage
+        const storage = CONFIG.tokenStorage === 'sessionStorage' ? sessionStorage : localStorage;
+        return storage.getItem('drf_auth_access_token');
+    }
+
+    function getUserInfoFromStorage() {
+        // Try cookie approach first (if enabled)
+        if (CONFIG.useHttpOnlyCookie) {
+            const userEmail = getCookie('user_email');
+            return userEmail ? { email: userEmail } : null;
+        }
+        
+        // Fallback to localStorage/sessionStorage
+        const storage = CONFIG.tokenStorage === 'sessionStorage' ? sessionStorage : localStorage;
+        const userInfo = storage.getItem('drf_auth_user_info');
+        return userInfo ? JSON.parse(userInfo) : null;
+    }
+
     // Setup event listeners
     function setupEventListeners() {
         const loginForm = document.getElementById('drf-login-form');
@@ -125,17 +163,22 @@
             const data = await response.json();
             
             if (response.ok) {
-                // Store tokens based on configuration
-                const storage = CONFIG.tokenStorage === 'sessionStorage' ? sessionStorage : localStorage;
-                storage.setItem('drf_auth_access_token', data.access_token);
-                storage.setItem('drf_auth_user_info', JSON.stringify(data.user));
+                // HttpOnly cookies are set by server automatically
+                // Only store in client storage if not using HttpOnly cookies
+                if (!CONFIG.useHttpOnlyCookie) {
+                    const storage = CONFIG.tokenStorage === 'sessionStorage' ? sessionStorage : localStorage;
+                    storage.setItem('drf_auth_access_token', data.access_token);
+                    storage.setItem('drf_auth_user_info', JSON.stringify(data.user));
+                }
                 
                 updateAuthStatus(true, data.user.email);
                 showMessage(data.message || getMessage('loginSuccess'), 'success');
                 
                 document.getElementById('drf-login-form').reset();
                 
-                if (CONFIG.autoAuthorize) {
+                // For HttpOnly cookies, the token is automatically sent with requests
+                // so we don't need to set it in Swagger Authorization
+                if (CONFIG.autoAuthorize && !CONFIG.useHttpOnlyCookie) {
                     setSwaggerAuthorization(data.access_token);
                 }
             } else {
@@ -152,18 +195,44 @@
     }
 
     // Handle logout
-    function handleLogout() {
-        const storage = CONFIG.tokenStorage === 'sessionStorage' ? sessionStorage : localStorage;
-        storage.removeItem('drf_auth_access_token');
-        storage.removeItem('drf_auth_user_info');
-        
-        updateAuthStatus(false);
-        clearSwaggerAuthorization();
-        showMessage(getMessage('logoutSuccess'), 'success');
+    async function handleLogout() {
+        try {
+            // Call logout endpoint to clear HttpOnly cookies
+            const response = await fetch('/api/auth/logout/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': CONFIG.csrfToken
+                },
+                credentials: 'include'  // Include cookies
+            });
+            
+            // Clear client-side storage regardless of server response
+            if (!CONFIG.useHttpOnlyCookie) {
+                const storage = CONFIG.tokenStorage === 'sessionStorage' ? sessionStorage : localStorage;
+                storage.removeItem('drf_auth_access_token');
+                storage.removeItem('drf_auth_user_info');
+            }
+            
+            updateAuthStatus(false);
+            clearSwaggerAuthorization();
+            showMessage(getMessage('logoutSuccess'), 'success');
+            
+        } catch (error) {
+            console.error('Logout error:', error);
+            // Still clear local state even if server call fails
+            updateAuthStatus(false);
+            showMessage(getMessage('logoutSuccess'), 'success');
+        }
     }
 
     // Handle token copy
     async function handleCopyToken() {
+        if (CONFIG.useHttpOnlyCookie) {
+            showMessage('Token copy not available with HttpOnly cookies for security', 'error');
+            return;
+        }
+        
         const storage = CONFIG.tokenStorage === 'sessionStorage' ? sessionStorage : localStorage;
         const token = storage.getItem('drf_auth_access_token');
         
@@ -366,21 +435,24 @@
 
     // Check existing authentication
     function checkExistingAuth() {
-        const storage = CONFIG.tokenStorage === 'sessionStorage' ? sessionStorage : localStorage;
-        const token = storage.getItem('drf_auth_access_token');
-        const userInfo = storage.getItem('drf_auth_user_info');
+        const token = getTokenFromStorage();
+        const userInfo = getUserInfoFromStorage();
         
         if (token && userInfo) {
             try {
-                const user = JSON.parse(userInfo);
-                updateAuthStatus(true, user.email);
-                if (CONFIG.autoAuthorize) {
+                updateAuthStatus(true, userInfo.email);
+                // Only set Swagger auth if not using HttpOnly cookies
+                if (CONFIG.autoAuthorize && !CONFIG.useHttpOnlyCookie) {
                     setSwaggerAuthorization(token);
                 }
             } catch (error) {
-                console.error('Error parsing user info:', error);
-                storage.removeItem('drf_auth_access_token');
-                storage.removeItem('drf_auth_user_info');
+                console.error('Error checking existing auth:', error);
+                // Clear invalid auth data
+                if (!CONFIG.useHttpOnlyCookie) {
+                    const storage = CONFIG.tokenStorage === 'sessionStorage' ? sessionStorage : localStorage;
+                    storage.removeItem('drf_auth_access_token');
+                    storage.removeItem('drf_auth_user_info');
+                }
             }
         }
     }
