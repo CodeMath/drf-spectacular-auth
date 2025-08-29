@@ -4,13 +4,13 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "drf-spectacular-auth"
-version = "1.0.0"
+version = "1.0.2"
 description = "Authentication UI for DRF Spectacular with AWS Cognito support"
 readme = "README.md"
 requires-python = ">=3.8"
 license = {text = "MIT"}
 authors = [
-    {name = "Your Name", email = "your.email@example.com"}
+    {name = "CodeMath", email = "jadecon2655@gmail.com"}
 ]
 keywords = ["django", "drf", "spectacular", "swagger", "cognito", "auth", "ui"]
 classifiers = [
