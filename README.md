@@ -29,15 +29,32 @@ pip install drf-spectacular-auth
 
 ```python
 INSTALLED_APPS = [
+    'drf_spectacular_auth',  # Add 'drf_spectacular_auth' before 'drf_spectacular'
     'drf_spectacular',
-    'drf_spectacular_auth',  # Add this
     # ... your other apps
+]
+
+# Optional: Add authentication backend for better integration
+AUTHENTICATION_BACKENDS = [
+    'drf_spectacular_auth.backend.SpectacularAuthBackend',
+    'django.contrib.auth.backends.ModelBackend',  # Keep default backend
+]
+
+# Optional: Add middleware for automatic authentication
+MIDDLEWARE = [
+    # ... your existing middleware
+    'drf_spectacular_auth.middleware.SpectacularAuthMiddleware',
+    # ... rest of your middleware
 ]
 
 DRF_SPECTACULAR_AUTH = {
     'COGNITO_REGION': 'your-aws-region',
     'COGNITO_CLIENT_ID': 'your-cognito-client-id',
     'COGNITO_CLIENT_SECRET': 'your-client-secret',  # Private client인 경우에만 필요
+    
+    # Optional: User management settings
+    'AUTO_CREATE_USERS': True,  # Auto-create users from Cognito
+    'REQUIRE_AUTHENTICATION': False,  # Require auth to access Swagger UI
 }
 ```
 
@@ -57,14 +74,14 @@ urlpatterns = [
 
 ## 📁 Examples
 
-완전한 사용법 예시를 확인하려면 [examples/](./examples/) 폴더를 참조하세요:
+Please Example Check [examples/](./examples/).
 
-- **[basic_usage/](./examples/basic_usage/)** - 기본적인 Django + DRF + AWS Cognito 통합 예시
-- **cognito_integration/** - AWS Cognito 고급 설정 예시 (준비 중)
-- **custom_theming/** - 사용자 정의 테마 적용 예시 (준비 중)  
-- **hooks_example/** - 로그인/로그아웃 훅 사용법 예시 (준비 중)
+- **[basic_usage/](./examples/basic_usage/)** - Basic Django + DRF + AWS Cognito integration example
+- **cognito_integration/** - AWS Cognito integration (Not yet)
+- **custom_theming/** - Custom thema example (Not yet)  
+- **hooks_example/** - Login and Logout hook example (Not yet)
 
-### 빠른 테스트
+### Test
 
 ```bash
 cd examples/basic_usage
@@ -73,34 +90,62 @@ python manage.py migrate
 python manage.py runserver
 ```
 
-브라우저에서 `http://localhost:8000/docs/`에 접속하여 인증이 통합된 Swagger UI를 확인할 수 있습니다.
+Check browser `http://localhost:8000/docs/` 
+
+## 🏗️ Architecture
+
+### Integration Strategies
+
+This package offers multiple integration strategies to suit different use cases:
+
+**1. Simple Auth Panel (Default)**
+- Adds authentication panel to Swagger UI
+- Minimal configuration required
+- Good for basic documentation with optional authentication
+
+**2. Middleware Integration (Recommended)**
+- Automatic authentication handling
+- Session-based auth persistence
+- Better integration with existing Django auth
+
+**3. Backend Integration (Advanced)**
+- Full Django user integration
+- Auto-create users from Cognito
+- Supports existing Django permission systems
+
+### Comparison with django-auth-adfs
+
+Unlike django-auth-adfs which focuses on ADFS/Azure AD integration, this package:
+- Specializes in AWS Cognito authentication
+- Focuses on API documentation (Swagger UI) integration
+- Offers lighter-weight integration options
+- Supports both simple overlay and full Django auth integration
 
 ## ⚙️ Configuration
 
 ### AWS Cognito Client Types
 
-**Public Client** (기본):
-- Client Secret이 필요하지 않음
-- `COGNITO_CLIENT_SECRET` 설정 불필요
-- 대부분의 웹 애플리케이션에 적합
+**Public Client** (Basic):
+- Not Client Secret
+- `COGNITO_CLIENT_SECRET=None`
 
-**Private Client** (보안 강화):
-- Client Secret 필요
-- `COGNITO_CLIENT_SECRET` 설정 필수
-- SECRET_HASH 자동 계산 및 적용
+**Private Client** (Enhanced):
+- Need Client Secret
+- Must have `COGNITO_CLIENT_SECRET`
+- Automatic calculate SECRET_HASH
 
 ```python
-# Public Client (기본)
+# Public Client (Basic)
 DRF_SPECTACULAR_AUTH = {
     'COGNITO_REGION': 'ap-northeast-2',
     'COGNITO_CLIENT_ID': 'your-public-client-id',
 }
 
-# Private Client (보안 강화)
+# Private Client (Enhanced)
 DRF_SPECTACULAR_AUTH = {
     'COGNITO_REGION': 'ap-northeast-2',
     'COGNITO_CLIENT_ID': 'your-private-client-id',
-    'COGNITO_CLIENT_SECRET': os.getenv('COGNITO_CLIENT_SECRET'),  # 환경변수 사용 권장
+    'COGNITO_CLIENT_SECRET': os.getenv('COGNITO_CLIENT_SECRET'),
 }
 ```
 
@@ -111,7 +156,7 @@ DRF_SPECTACULAR_AUTH = {
     # AWS Cognito Settings
     'COGNITO_REGION': 'ap-northeast-2',
     'COGNITO_CLIENT_ID': 'your-client-id',
-    'COGNITO_CLIENT_SECRET': None,  # Private client인 경우에만 설정 (환경변수 사용 권장)
+    'COGNITO_CLIENT_SECRET': None,
     
     # API Endpoints
     'LOGIN_ENDPOINT': '/api/auth/login/',
@@ -141,6 +186,11 @@ DRF_SPECTACULAR_AUTH = {
     # Security
     'TOKEN_STORAGE': 'localStorage',  # localStorage, sessionStorage
     'CSRF_PROTECTION': True,
+    
+    # User Management
+    'AUTO_CREATE_USERS': False,  # Auto-create users from successful authentication
+    'CREATE_TEMP_USER': True,   # Create temporary users for documentation access
+    'REQUIRE_AUTHENTICATION': False,  # Require auth to access Swagger UI
     
     # Extensibility
     'CUSTOM_AUTH_PROVIDERS': [],
