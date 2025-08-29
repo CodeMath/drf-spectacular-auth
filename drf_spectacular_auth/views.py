@@ -77,18 +77,7 @@ class SpectacularAuthSwaggerView(SpectacularSwaggerView):
         return language
 
 
-@extend_schema(
-    summary="사용자 로그인",
-    description="AWS Cognito를 통한 사용자 인증을 수행합니다.",
-    request=LoginSerializer,
-    responses={
-        200: LoginResponseSerializer,
-        400: ErrorResponseSerializer,
-        401: ErrorResponseSerializer,
-        500: ErrorResponseSerializer,
-    },
-    tags=["Authentication"],
-)
+@extend_schema(exclude=True)
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def login_view(request):
@@ -157,21 +146,7 @@ def login_view(request):
         )
 
 
-@extend_schema(
-    summary="사용자 로그아웃",
-    description="현재 사용자의 로그아웃을 수행합니다.",
-    request=None,
-    responses={
-        200: {
-            "type": "object",
-            "properties": {
-                "message": {"type": "string", "example": "Logout successful"}
-            },
-        },
-        500: ErrorResponseSerializer,
-    },
-    tags=["Authentication"],
-)
+@extend_schema(exclude=True)
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def logout_view(request):
