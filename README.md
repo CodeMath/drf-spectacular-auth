@@ -194,7 +194,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📚 Links
 
-- [Documentation](https://drf-spectacular-auth.readthedocs.io/)
+- [Documentation](https://github.com/CodeMath/drf-spectacular-auth#readme)
 - [PyPI](https://pypi.org/project/drf-spectacular-auth/)
-- [GitHub](https://github.com/yourusername/drf-spectacular-auth)
-- [Issues](https://github.com/yourusername/drf-spectacular-auth/issues)
+- [GitHub](https://github.com/CodeMath/drf-spectacular-auth)
+- [Issues](https://github.com/CodeMath/drf-spectacular-auth/issues)

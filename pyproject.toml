@@ -50,10 +50,10 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourusername/drf-spectacular-auth"
-Repository = "https://github.com/yourusername/drf-spectacular-auth"
-Documentation = "https://drf-spectacular-auth.readthedocs.io/"
-"Bug Tracker" = "https://github.com/yourusername/drf-spectacular-auth/issues"
+Homepage = "https://github.com/CodeMath/drf-spectacular-auth"
+Repository = "https://github.com/CodeMath/drf-spectacular-auth"
+Documentation = "https://github.com/CodeMath/drf-spectacular-auth#readme"
+"Bug Tracker" = "https://github.com/CodeMath/drf-spectacular-auth/issues"
 
 [tool.setuptools.packages.find]
 where = ["."]

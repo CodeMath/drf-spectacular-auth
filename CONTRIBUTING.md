@@ -24,7 +24,7 @@ We use GitHub to host code, to track issues and feature requests, as well as acc
 ## Development Setup
 
 ```bash
-git clone https://github.com/yourusername/drf-spectacular-auth.git
+git clone https://github.com/CodeMath/drf-spectacular-auth.git
 cd drf-spectacular-auth
 pip install -e ".[dev]"
 ```
