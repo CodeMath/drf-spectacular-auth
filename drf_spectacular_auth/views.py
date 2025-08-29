@@ -29,13 +29,14 @@ logger = logging.getLogger(__name__)
 
 class SpectacularAuthSwaggerView(SpectacularSwaggerView):
     """
-    Proper SpectacularSwaggerView extension using template inheritance
-    
+    Enhanced SpectacularSwaggerView with direct auth context injection
+
     This approach:
-    1. Properly extends drf-spectacular/swagger_ui.html 
-    2. Adds auth panel via template blocks (no overlay)
-    3. Preserves original drf-spectacular UI completely
-    4. No intrusive JavaScript injection
+    1. Overrides get() method to inject auth context directly into Response data
+    2. Properly extends drf-spectacular/swagger_ui.html
+    3. Adds auth panel via template blocks (no overlay)
+    4. Preserves original drf-spectacular UI completely
+    5. Better integration with drf-spectacular's architecture
     """
 
     template_name = "drf_spectacular_auth/swagger_ui.html"
@@ -49,15 +50,34 @@ class SpectacularAuthSwaggerView(SpectacularSwaggerView):
             pass
         return super().dispatch(request, *args, **kwargs)
 
-    def get_context_data(self, **kwargs):
-        try:
-            context = super().get_context_data(**kwargs)
-        except AttributeError:
-            # Fallback for testing
-            context = {}
+    @extend_schema(exclude=True)
+    def get(self, request, *args, **kwargs):
+        """
+        Override get() method to inject auth context directly into Response data
+        """
+        # Get the original response data from parent
+        response = super().get(request, *args, **kwargs)
 
-        # Add authentication panel context
-        auth_context = {
+        # Add our authentication context to the data
+        auth_context = self._get_auth_context()
+        response.data.update(auth_context)
+
+        return response
+
+    def _get_auth_context(self):
+        """
+        Generate authentication context for the template
+        """
+        # Create context for JavaScript template rendering
+        js_context = {
+            "auth_settings": auth_settings.settings,
+            "login_url": auth_settings.LOGIN_ENDPOINT,
+            "csrf_token": get_token(self.request),
+            "theme": auth_settings.THEME,
+            "language": self._get_language(),
+        }
+
+        return {
             "auth_settings": auth_settings.settings,
             "login_url": auth_settings.LOGIN_ENDPOINT,
             "csrf_token": get_token(self.request),
@@ -65,17 +85,10 @@ class SpectacularAuthSwaggerView(SpectacularSwaggerView):
             "panel_style": auth_settings.PANEL_STYLE,
             "theme": auth_settings.THEME,
             "language": self._get_language(),
+            "auth_panel_js": render_to_string(
+                "drf_spectacular_auth/auth_panel.js", js_context, request=self.request
+            ),
         }
-
-        # Add all auth context to main context
-        context.update(auth_context)
-
-        # Render authentication panel JavaScript
-        context["auth_panel_js"] = render_to_string(
-            "drf_spectacular_auth/auth_panel.js", auth_context, request=self.request
-        )
-
-        return context
 
     def _get_language(self) -> str:
         """Get current language from request or settings"""
@@ -83,7 +96,6 @@ class SpectacularAuthSwaggerView(SpectacularSwaggerView):
         if not language or language not in auth_settings.SUPPORTED_LANGUAGES:
             language = auth_settings.DEFAULT_LANGUAGE
         return language
-
 
 
 @extend_schema(exclude=True)

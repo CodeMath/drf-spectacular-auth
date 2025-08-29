@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.1] - 2025-08-29
+
+### 🚨 Critical Bug Fix
+- **Fixed JavaScript functionality** - Authentication form now works properly
+- **Enhanced template processing** - Django template variables in JavaScript now render correctly
+- **Improved architecture** - Override SpectacularSwaggerView.get() method for better integration
+
+### 🔧 Technical Improvements
+- **Direct Response data injection** - Auth context added directly to Response data dictionary
+- **Better drf-spectacular integration** - Follows drf-spectacular's architectural patterns
+- **Template variable processing** - Fixed CONFIG object in JavaScript with proper variable substitution
+
+### ✅ Fixed
+- Login form functionality completely broken due to template variable processing issues
+- JavaScript CONFIG object receiving unprocessed Django template variables
+- Event handlers not attaching due to malformed JavaScript configuration
+- CSRF token, login URL, and other critical variables not being substituted
+
+### 🏗️ Architecture
+- **Enhanced SpectacularSwaggerView**: Now overrides get() method instead of get_context_data()
+- **Direct data injection**: Auth context added directly to Response data for better template access
+- **Improved context flow**: JavaScript template rendering with proper variable substitution
+
 ## [1.2.0] - 2025-08-29
 
 ### 🎯 Major Improvements
