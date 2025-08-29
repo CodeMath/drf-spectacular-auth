@@ -56,6 +56,7 @@ REST_FRAMEWORK = {
 DRF_SPECTACULAR_AUTH = {
     'COGNITO_REGION': 'us-east-1',
     'COGNITO_CLIENT_ID': 'test-client-id',
+    'COGNITO_CLIENT_SECRET': None,
 }
 
 USE_TZ = True

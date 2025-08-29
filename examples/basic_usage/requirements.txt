@@ -1,0 +1,10 @@
+# Django 기본 요구사항
+Django>=4.2,<5.1
+djangorestframework>=3.14
+drf-spectacular>=0.25.0
+
+# drf-spectacular-auth 패키지
+drf-spectacular-auth>=1.0.2
+
+# AWS Cognito 인증을 위한 boto3 (선택사항)
+boto3>=1.20.0
