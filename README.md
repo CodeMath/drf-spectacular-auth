@@ -2,7 +2,20 @@
 
 🔐 **Authentication UI for DRF Spectacular with AWS Cognito support**
 
+[![PyPI version](https://badge.fury.io/py/drf-spectacular-auth.svg)](https://badge.fury.io/py/drf-spectacular-auth)
+[![Python](https://img.shields.io/pypi/pyversions/drf-spectacular-auth.svg)](https://pypi.org/project/drf-spectacular-auth/)
+[![Django](https://img.shields.io/badge/django-3.2%2B-blue.svg)](https://www.djangoproject.com/)
+[![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
 A Django package that adds a beautiful authentication panel to your DRF Spectacular (Swagger UI) documentation, with built-in support for AWS Cognito and extensible authentication providers.
+
+## 🆕 What's New in v1.2.0
+
+- ✅ **Fixed topbar issues** - No more unwanted UI overlays
+- 🎯 **Proper template inheritance** - Uses correct `{% extends 'drf_spectacular/swagger_ui.html' %}`
+- 🧹 **Major code cleanup** - 50% reduction in files, 800+ lines of code removed
+- ⚡ **Improved performance** - Faster loading and cleaner structure
+- 📁 **Simplified architecture** - Easier maintenance and understanding
 
 ## ✨ Features
 
@@ -21,6 +34,12 @@ A Django package that adds a beautiful authentication panel to your DRF Spectacu
 
 ```bash
 pip install drf-spectacular-auth
+```
+
+Or get the latest version:
+
+```bash
+pip install --upgrade drf-spectacular-auth
 ```
 
 ### Basic Setup
@@ -241,12 +260,41 @@ DRF_SPECTACULAR_AUTH = {
 }
 ```
 
+## 🐛 Troubleshooting
+
+### Common Issues
+
+**Q: I see unwanted topbar in my Swagger UI**  
+A: Update to v1.2.0+ which fixes the template inheritance issue.
+
+**Q: Authentication panel is not showing**  
+A: Make sure you're using `SpectacularAuthSwaggerView` instead of the default Swagger view.
+
+**Q: Token not being auto-authorized in Swagger**  
+A: Verify that `AUTO_AUTHORIZE: True` is set in your settings and check browser console for errors.
+
+**Q: AWS Cognito authentication fails**  
+A: Check your Cognito configuration:
+- Verify `COGNITO_REGION`, `COGNITO_CLIENT_ID` are correct
+- For private clients, ensure `COGNITO_CLIENT_SECRET` is set
+- Check AWS Cognito logs for detailed error messages
+
+**Q: Template loading errors**  
+A: Ensure `drf_spectacular_auth` is added to `INSTALLED_APPS` before `drf_spectacular`.
+
+### Migration from Previous Versions
+
+**From v1.1.x to v1.2.0:**
+- No breaking changes - just update your package
+- Topbar issues will be automatically resolved
+- Remove any custom workarounds for template conflicts
+
 ## 🔧 Development
 
 ### Local Development
 
 ```bash
-git clone https://github.com/yourusername/drf-spectacular-auth.git
+git clone https://github.com/CodeMath/drf-spectacular-auth.git
 cd drf-spectacular-auth
 pip install -e ".[dev]"
 ```
