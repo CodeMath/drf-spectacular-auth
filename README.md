@@ -46,12 +46,33 @@ DRF_SPECTACULAR_AUTH = {
 from drf_spectacular_auth.views import SpectacularAuthSwaggerView
 
 urlpatterns = [
+    path('api/auth/', include('drf_spectacular_auth.urls')),  # Authentication endpoints
     path('api/docs/', SpectacularAuthSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
     # ... your other urls
 ]
 ```
 
 3. That's it! 🎉 Your Swagger UI now has an authentication panel.
+
+## 📁 Examples
+
+완전한 사용법 예시를 확인하려면 [examples/](./examples/) 폴더를 참조하세요:
+
+- **[basic_usage/](./examples/basic_usage/)** - 기본적인 Django + DRF + AWS Cognito 통합 예시
+- **cognito_integration/** - AWS Cognito 고급 설정 예시 (준비 중)
+- **custom_theming/** - 사용자 정의 테마 적용 예시 (준비 중)  
+- **hooks_example/** - 로그인/로그아웃 훅 사용법 예시 (준비 중)
+
+### 빠른 테스트
+
+```bash
+cd examples/basic_usage
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py runserver
+```
+
+브라우저에서 `http://localhost:8000/docs/`에 접속하여 인증이 통합된 Swagger UI를 확인할 수 있습니다.
 
 ## ⚙️ Configuration
 
@@ -140,12 +161,6 @@ DRF_SPECTACULAR_AUTH = {
     }
 }
 ```
-
-## 📱 Screenshots
-
-| Light Theme | Dark Theme |
-|-------------|------------|
-| ![Light](docs/images/light-theme.png) | ![Dark](docs/images/dark-theme.png) |
 
 ## 🔧 Development
 
