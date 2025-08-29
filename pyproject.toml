@@ -62,6 +62,7 @@ include = ["drf_spectacular_auth*"]
 [tool.setuptools.package-data]
 drf_spectacular_auth = [
     "templates/drf_spectacular_auth/*.html",
+    "templates/drf_spectacular_auth/*.js",
     "static/drf_spectacular_auth/*.css",
     "static/drf_spectacular_auth/*.js",
 ]
