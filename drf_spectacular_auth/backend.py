@@ -5,9 +5,11 @@ Authentication backend for DRF Spectacular Auth
 import logging
 from typing import Optional
 
+from django.contrib.auth import get_user_model
 from django.contrib.auth.backends import BaseBackend
 from django.http import HttpRequest
 
+from .conf import auth_settings
 from .providers.cognito import CognitoAuthProvider
 
 logger = logging.getLogger(__name__)
@@ -45,8 +47,6 @@ class SpectacularAuthBackend(BaseBackend):
         Get user by ID - required by Django auth backend interface
         """
         try:
-            from django.contrib.auth import get_user_model
-
             User = get_user_model()
             return User.objects.get(pk=user_id)
         except Exception:
@@ -56,10 +56,6 @@ class SpectacularAuthBackend(BaseBackend):
         """
         Get existing user or create new one based on Cognito user info
         """
-        from django.contrib.auth import get_user_model
-
-        from .conf import auth_settings
-
         User = get_user_model()
         email = user_info.get("email")
 
@@ -91,8 +87,6 @@ class SpectacularAuthBackend(BaseBackend):
         """
         Create a new user from Cognito user info
         """
-        from django.contrib.auth import get_user_model
-
         User = get_user_model()
 
         user_data = {

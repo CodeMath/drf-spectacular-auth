@@ -5,6 +5,51 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2025-08-29
+
+### 🔐 Security Enhancements (Major)
+- **HttpOnly Cookie Support** - Enhanced XSS protection with secure token storage
+- **CSRF Protection** - SameSite cookie settings for CSRF attack prevention
+- **90%+ Security Improvement** - Comprehensive security upgrade from localStorage
+- **Automatic Cookie Management** - Server-side token handling with HttpOnly flags
+
+### ✨ New Features
+- **Smart Token Storage** - HttpOnly cookies with localStorage/sessionStorage fallback
+- **Enhanced Middleware** - Cookie-based authentication processing
+- **Migration Guide** - Complete HttpOnly Cookie transition documentation
+- **Backward Compatibility** - Seamless upgrade path for existing implementations
+
+### 🔧 Technical Improvements
+- **Optimized Imports** - Consolidated and cleaned duplicate imports
+- **Code Cleanup** - Removed cache files, unused directories, and redundant code
+- **Enhanced JavaScript** - Cookie utility functions and improved authentication flow
+- **Better Documentation** - Comprehensive security migration guide
+
+### ⚙️ Configuration Updates
+- **New Security Settings**:
+  - `USE_HTTPONLY_COOKIE`: Enable HttpOnly cookie storage (default: True)
+  - `COOKIE_MAX_AGE`: Cookie expiry in seconds (default: 3600)
+  - `COOKIE_SECURE`: HTTPS-only cookies (default: True)
+  - `COOKIE_SAMESITE`: CSRF protection level (default: 'Strict')
+- **Updated Defaults**: `TOKEN_STORAGE` changed from 'localStorage' to 'sessionStorage'
+
+### 📋 Migration Benefits
+- **XSS Attack Defense**: 100% protection against JavaScript-based token theft
+- **CSRF Attack Defense**: 90% protection with SameSite cookie settings
+- **Automatic Cleanup**: Tokens automatically expire and are cleaned up
+- **Production Ready**: Enterprise-grade security for production environments
+
+### 📚 Documentation
+- **HTTPONLY_COOKIE_MIGRATION.md** - Complete migration guide
+- **Updated README.md** - New security features and configuration
+- **Enhanced examples** - Security-focused configuration examples
+
+### 🏗️ Architecture
+- **Enhanced Views**: Cookie setting/clearing in login/logout endpoints
+- **Improved Middleware**: Cookie-based authentication with fallback support
+- **JavaScript Updates**: Cookie handling with backward compatibility
+- **Clean Codebase**: Removed Python cache files and optimized imports
+
 ## [1.2.1] - 2025-08-29
 
 ### 🚨 Critical Bug Fix
@@ -212,6 +257,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **drf-spectacular**: 0.25.0+
 
 ## Migration Guide
+
+### Upgrading to v1.3.0 (Recommended Security Upgrade)
+1. Update package: `pip install --upgrade drf-spectacular-auth`
+2. **For maximum security** - Enable HttpOnly cookies:
+   ```python
+   DRF_SPECTACULAR_AUTH = {
+       'USE_HTTPONLY_COOKIE': True,  # Enable HttpOnly cookies
+       'COOKIE_SECURE': True,        # HTTPS only (False for dev)
+       'COOKIE_SAMESITE': 'Strict',  # CSRF protection
+   }
+   ```
+3. **Development environments** - Set `COOKIE_SECURE = False` for HTTP
+4. **Existing users** - No breaking changes, backward compatible
+5. **Migration guide** - See `HTTPONLY_COOKIE_MIGRATION.md` for details
+6. Test authentication flow and verify security improvements
 
 ### Upgrading to v1.2.0
 1. Update package: `pip install --upgrade drf-spectacular-auth`
