@@ -1,12 +1,14 @@
 """
 Views for DRF Spectacular Auth
 """
+
 import logging
-from typing import Dict, Any
+from typing import Any, Dict
 
 from django.middleware.csrf import get_token
 from django.template.loader import render_to_string
 from django.utils.module_loading import import_string
+from drf_spectacular.utils import extend_schema
 from drf_spectacular.views import SpectacularSwaggerView
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -14,14 +16,13 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from .conf import auth_settings
-from .providers.cognito import CognitoAuthProvider
 from .providers.base import AuthenticationError
+from .providers.cognito import CognitoAuthProvider
 from .serializers import (
-    LoginSerializer, 
-    LoginResponseSerializer, 
-    ErrorResponseSerializer
+    ErrorResponseSerializer,
+    LoginResponseSerializer,
+    LoginSerializer,
 )
-
 
 logger = logging.getLogger(__name__)
 
@@ -30,56 +31,65 @@ class SpectacularAuthSwaggerView(SpectacularSwaggerView):
     """
     Extended SpectacularSwaggerView with authentication panel
     """
-    template_name = 'drf_spectacular/swagger_ui.html'
-    
+
+    template_name = "drf_spectacular/swagger_ui.html"
+
     def get_context_data(self, **kwargs):
         try:
             context = super().get_context_data(**kwargs)
         except AttributeError:
             # Fallback for testing
             context = {}
-        
+
         # Add authentication panel context
         auth_context = {
-            'auth_settings': auth_settings.settings,
-            'login_url': auth_settings.LOGIN_ENDPOINT,
-            'csrf_token': get_token(self.request),
-            'panel_position': auth_settings.PANEL_POSITION,
-            'panel_style': auth_settings.PANEL_STYLE,
-            'theme': auth_settings.THEME,
-            'language': self._get_language(),
+            "auth_settings": auth_settings.settings,
+            "login_url": auth_settings.LOGIN_ENDPOINT,
+            "csrf_token": get_token(self.request),
+            "panel_position": auth_settings.PANEL_POSITION,
+            "panel_style": auth_settings.PANEL_STYLE,
+            "theme": auth_settings.THEME,
+            "language": self._get_language(),
         }
-        
+
         # Render authentication panel HTML
-        context['auth_panel_html'] = render_to_string(
-            'drf_spectacular_auth/auth_panel.html',
-            auth_context,
-            request=self.request
+        context["auth_panel_html"] = render_to_string(
+            "drf_spectacular_auth/auth_panel.html", auth_context, request=self.request
         )
-        
+
         # Add authentication panel JavaScript
-        context['auth_panel_js'] = render_to_string(
-            'drf_spectacular_auth/auth_panel.js',
-            auth_context,
-            request=self.request
+        context["auth_panel_js"] = render_to_string(
+            "drf_spectacular_auth/auth_panel.js", auth_context, request=self.request
         )
-        
+
         return context
-    
+
     def _get_language(self) -> str:
         """
         Get current language from request or settings
         """
         # Try to get language from request
-        language = getattr(self.request, 'LANGUAGE_CODE', None)
-        
+        language = getattr(self.request, "LANGUAGE_CODE", None)
+
         if not language or language not in auth_settings.SUPPORTED_LANGUAGES:
             language = auth_settings.DEFAULT_LANGUAGE
-        
+
         return language
 
 
-@api_view(['POST'])
+@extend_schema(
+    summary="사용자 로그인",
+    description="AWS Cognito를 통한 사용자 인증을 수행합니다.",
+    request=LoginSerializer,
+    responses={
+        200: LoginResponseSerializer,
+        400: ErrorResponseSerializer,
+        401: ErrorResponseSerializer,
+        500: ErrorResponseSerializer,
+    },
+    tags=["Authentication"],
+)
+@api_view(["POST"])
 @permission_classes([AllowAny])
 def login_view(request):
     """
@@ -88,67 +98,81 @@ def login_view(request):
     serializer = LoginSerializer(data=request.data)
     if not serializer.is_valid():
         return Response(
-            ErrorResponseSerializer({
-                'error': 'Invalid request data',
-                'detail': str(serializer.errors)
-            }).data,
-            status=status.HTTP_400_BAD_REQUEST
+            ErrorResponseSerializer(
+                {"error": "Invalid request data", "detail": str(serializer.errors)}
+            ).data,
+            status=status.HTTP_400_BAD_REQUEST,
         )
-    
+
     credentials = serializer.validated_data
-    
+
     try:
         # Get authentication provider
         provider = _get_auth_provider()
-        
+
         # Validate credentials
         if not provider.validate_credentials(credentials):
             return Response(
-                ErrorResponseSerializer({
-                    'error': 'Invalid credentials format',
-                    'detail': 'Please check your email and password format'
-                }).data,
-                status=status.HTTP_400_BAD_REQUEST
+                ErrorResponseSerializer(
+                    {
+                        "error": "Invalid credentials format",
+                        "detail": "Please check your email and password format",
+                    }
+                ).data,
+                status=status.HTTP_400_BAD_REQUEST,
             )
-        
+
         # Call pre-login hook if configured
-        _call_hook('PRE_LOGIN', request, credentials)
-        
+        _call_hook("PRE_LOGIN", request, credentials)
+
         # Authenticate user
         auth_result = provider.authenticate(credentials)
-        
+
         # Call post-login hook if configured
-        _call_hook('POST_LOGIN', request, auth_result)
-        
+        _call_hook("POST_LOGIN", request, auth_result)
+
         logger.info(f"Successful login for user: {credentials.get('email')}")
-        
+
         return Response(
-            LoginResponseSerializer(auth_result).data,
-            status=status.HTTP_200_OK
+            LoginResponseSerializer(auth_result).data, status=status.HTTP_200_OK
         )
-        
+
     except AuthenticationError as e:
         logger.warning(f"Authentication failed: {e.message}")
         return Response(
-            ErrorResponseSerializer({
-                'error': e.message,
-                'detail': e.detail
-            }).data,
-            status=status.HTTP_401_UNAUTHORIZED
+            ErrorResponseSerializer({"error": e.message, "detail": e.detail}).data,
+            status=status.HTTP_401_UNAUTHORIZED,
         )
-        
+
     except Exception as e:
         logger.error(f"Unexpected error during authentication: {str(e)}")
         return Response(
-            ErrorResponseSerializer({
-                'error': 'Authentication service error',
-                'detail': 'An unexpected error occurred during authentication'
-            }).data,
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            ErrorResponseSerializer(
+                {
+                    "error": "Authentication service error",
+                    "detail": "An unexpected error occurred during authentication",
+                }
+            ).data,
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
 
-@api_view(['POST'])
+@extend_schema(
+    summary="사용자 로그아웃",
+    description="현재 사용자의 로그아웃을 수행합니다.",
+    request=None,
+    responses={
+        200: {
+            "type": "object",
+            "properties": {
+                "message": {"type": "string", "example": "Logout successful"}
+            },
+        },
+        500: ErrorResponseSerializer,
+    },
+    tags=["Authentication"],
+)
+@api_view(["POST"])
 @permission_classes([AllowAny])
 def logout_view(request):
     """
@@ -156,26 +180,23 @@ def logout_view(request):
     """
     try:
         # Call pre-logout hook if configured
-        _call_hook('PRE_LOGOUT', request, {})
-        
+        _call_hook("PRE_LOGOUT", request, {})
+
         # For JWT tokens, logout is typically handled client-side
         # But we can perform any server-side cleanup here
-        
+
         # Call post-logout hook if configured
-        _call_hook('POST_LOGOUT', request, {})
-        
-        return Response({
-            'message': 'Logout successful'
-        }, status=status.HTTP_200_OK)
-        
+        _call_hook("POST_LOGOUT", request, {})
+
+        return Response({"message": "Logout successful"}, status=status.HTTP_200_OK)
+
     except Exception as e:
         logger.error(f"Error during logout: {str(e)}")
         return Response(
-            ErrorResponseSerializer({
-                'error': 'Logout failed',
-                'detail': 'An error occurred during logout'
-            }).data,
-            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            ErrorResponseSerializer(
+                {"error": "Logout failed", "detail": "An error occurred during logout"}
+            ).data,
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 
 
@@ -195,7 +216,7 @@ def _call_hook(hook_name: str, request, data: Dict[str, Any]) -> None:
     hook_path = auth_settings.HOOKS.get(hook_name)
     if not hook_path:
         return
-    
+
     try:
         hook_func = import_string(hook_path)
         hook_func(request, data)
