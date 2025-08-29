@@ -2,11 +2,11 @@
 Views for DRF Spectacular Auth
 """
 
-import json
 import logging
 from typing import Any, Dict
 
 from django.middleware.csrf import get_token
+from django.template.loader import render_to_string
 from django.utils.module_loading import import_string
 from drf_spectacular.utils import extend_schema
 from drf_spectacular.views import SpectacularSwaggerView
@@ -71,7 +71,6 @@ class SpectacularAuthSwaggerView(SpectacularSwaggerView):
         context.update(auth_context)
 
         # Render authentication panel JavaScript
-        from django.template.loader import render_to_string
         context["auth_panel_js"] = render_to_string(
             "drf_spectacular_auth/auth_panel.js", auth_context, request=self.request
         )
