@@ -232,3 +232,30 @@ class CognitoAuthProvider(AuthProvider):
             raise AuthenticationError(
                 "Token refresh failed", "Invalid or expired refresh token"
             )
+
+    def verify_token(self, access_token: str) -> Dict[str, Any]:
+        """
+        Verify access token and return user information
+
+        Args:
+            access_token: The access token to verify
+
+        Returns:
+            Dict containing user information if token is valid
+
+        Raises:
+            AuthenticationError: If token is invalid or expired
+        """
+        try:
+            # Get user info using the access token - this also validates it
+            user_info = self.get_user_info(access_token)
+            return user_info
+
+        except AuthenticationError:
+            # Re-raise authentication errors
+            raise
+        except Exception as e:
+            logger.error(f"Token verification failed: {str(e)}")
+            raise AuthenticationError(
+                "Token verification failed", "Invalid or expired access token"
+            )
