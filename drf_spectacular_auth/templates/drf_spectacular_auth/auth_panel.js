@@ -335,18 +335,68 @@
         }, 5000);
     }
 
-    // Set Swagger authorization
+    // Set Swagger authorization with dynamic scheme detection
     function setSwaggerAuthorization(token) {
         const checkUI = () => {
             if (window.ui && window.ui.preauthorizeApiKey) {
-                window.ui.preauthorizeApiKey('BearerAuth', token);
-                console.log('Swagger authorization set successfully');
-                updateAuthorizationModal(token);
+                const schemeName = detectBearerScheme();
+                if (schemeName) {
+                    window.ui.preauthorizeApiKey(schemeName, token);
+                    console.log(`Swagger authorization set successfully with scheme: ${schemeName}`);
+                    updateAuthorizationModal(token);
+                } else {
+                    console.warn('No Bearer authentication scheme found in OpenAPI spec');
+                }
             } else {
                 setTimeout(checkUI, 500);
             }
         };
         checkUI();
+    }
+
+    // Detect Bearer authentication scheme from OpenAPI spec
+    function detectBearerScheme() {
+        try {
+            // Method 1: Extract from Swagger UI spec
+            const spec = window.ui?.specSelectors?.spec()?.toJS();
+            if (spec?.components?.securitySchemes) {
+                const schemes = spec.components.securitySchemes;
+                
+                // Find Bearer scheme
+                const bearerScheme = Object.keys(schemes).find(name => {
+                    const scheme = schemes[name];
+                    return scheme?.type === 'http' && scheme?.scheme === 'bearer';
+                });
+                
+                if (bearerScheme) {
+                    console.log(`Auto-detected Bearer scheme: ${bearerScheme}`);
+                    return bearerScheme;
+                }
+            }
+            
+            // Method 2: Try common names as fallback
+            const commonNames = ['BearerAuth', 'Bearer', 'JWT', 'CognitoJWT', 'ApiKeyAuth', 'TokenAuth'];
+            console.log('OpenAPI spec detection failed, trying common scheme names...');
+            
+            for (const name of commonNames) {
+                try {
+                    // Test if the scheme exists by attempting to set empty value
+                    window.ui.preauthorizeApiKey(name, '');
+                    console.log(`Found working scheme: ${name}`);
+                    return name;
+                } catch (e) {
+                    // Scheme doesn't exist, continue
+                }
+            }
+            
+            console.warn('No Bearer authentication scheme could be detected');
+            return null;
+            
+        } catch (error) {
+            console.error('Error detecting Bearer scheme:', error);
+            // Fallback to original behavior
+            return 'BearerAuth';
+        }
     }
 
     // Update authorization modal
@@ -432,8 +482,11 @@
     // Clear Swagger authorization
     function clearSwaggerAuthorization() {
         if (window.ui && window.ui.preauthorizeApiKey) {
-            window.ui.preauthorizeApiKey('BearerAuth', '');
-            console.log('Swagger authorization cleared');
+            const schemeName = detectBearerScheme();
+            if (schemeName) {
+                window.ui.preauthorizeApiKey(schemeName, '');
+                console.log(`Swagger authorization cleared for scheme: ${schemeName}`);
+            }
         }
 
         fillAuthorizationFields('');
