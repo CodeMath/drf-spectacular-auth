@@ -1,8 +1,4 @@
-"""
-API 시리얼라이저 예시
-
-이 파일은 drf-spectacular-auth가 적용된 API의 시리얼라이저 예시를 보여줍니다.
-"""
+"""API 시리얼라이저 예시"""
 
 from django.contrib.auth.models import User
 from rest_framework import serializers

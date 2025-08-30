@@ -1,8 +1,4 @@
-"""
-Django Admin 설정
-
-이 파일은 Django Admin에서 모델을 관리하기 위한 설정입니다.
-"""
+"""Django Admin 설정"""
 
 from django.contrib import admin
 

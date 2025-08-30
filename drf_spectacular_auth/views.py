@@ -147,9 +147,35 @@ def login_view(request):
         request.session["spectacular_auth_token"] = auth_result["access_token"]
         request.session["spectacular_user_email"] = credentials.get("email")
 
-        return Response(
+        # Create response
+        response = Response(
             LoginResponseSerializer(auth_result).data, status=status.HTTP_200_OK
         )
+
+        # Set HttpOnly Cookie for secure token storage
+        if auth_settings.USE_HTTPONLY_COOKIE:
+            # HttpOnly cookie for token (JavaScript cannot access)
+            response.set_cookie(
+                key="auth_token",
+                value=auth_result["access_token"],
+                max_age=auth_settings.COOKIE_MAX_AGE,
+                httponly=True,  # Prevents JavaScript access
+                secure=auth_settings.COOKIE_SECURE,  # HTTPS only
+                samesite=auth_settings.COOKIE_SAMESITE,  # CSRF protection
+                path="/",
+            )
+
+            # Regular cookie for user info (UI display)
+            response.set_cookie(
+                key="user_email",
+                value=credentials.get("email"),
+                max_age=auth_settings.COOKIE_MAX_AGE,
+                secure=auth_settings.COOKIE_SECURE,
+                samesite=auth_settings.COOKIE_SAMESITE,
+                path="/",
+            )
+
+        return response
 
     except AuthenticationError as e:
         logger.warning(f"Authentication failed: {e.message}")
@@ -191,7 +217,15 @@ def logout_view(request):
         # Call post-logout hook if configured
         _call_hook("POST_LOGOUT", request, {})
 
-        return Response({"message": "Logout successful"}, status=status.HTTP_200_OK)
+        # Create response
+        response = Response({"message": "Logout successful"}, status=status.HTTP_200_OK)
+
+        # Clear HttpOnly cookies if enabled
+        if auth_settings.USE_HTTPONLY_COOKIE:
+            response.delete_cookie("auth_token", path="/")
+            response.delete_cookie("user_email", path="/")
+
+        return response
 
     except Exception as e:
         logger.error(f"Error during logout: {str(e)}")
