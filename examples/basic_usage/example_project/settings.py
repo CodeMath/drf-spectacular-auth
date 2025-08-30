@@ -28,8 +28,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     # Third-party apps
     "rest_framework",
-    "drf_spectacular",
     "drf_spectacular_auth",  # 우리의 패키지
+    "drf_spectacular",
     # Local apps
     "api",  # 예시 API 앱
 ]

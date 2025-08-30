@@ -32,9 +32,14 @@ DEFAULTS = {
     "DEFAULT_LANGUAGE": "en",
     "SUPPORTED_LANGUAGES": ["ko", "en", "ja"],
     # Security
-    "TOKEN_STORAGE": "localStorage",  # localStorage, sessionStorage
+    "TOKEN_STORAGE": "sessionStorage",  # localStorage, sessionStorage (DEPRECATED - use USE_HTTPONLY_COOKIE)
     "CSRF_PROTECTION": True,
     "TOKEN_REFRESH": False,
+    # HttpOnly Cookie Settings (Recommended for security)
+    "USE_HTTPONLY_COOKIE": True,  # Enable HttpOnly cookie storage
+    "COOKIE_MAX_AGE": 3600,  # Cookie expiry in seconds (1 hour)
+    "COOKIE_SECURE": True,  # HTTPS only (set False for development)
+    "COOKIE_SAMESITE": "Strict",  # CSRF protection: 'Strict', 'Lax', or 'None'
     # User Management
     "AUTO_CREATE_USERS": False,  # Auto-create users from successful authentication
     "CREATE_TEMP_USER": True,  # Create temporary users for documentation access

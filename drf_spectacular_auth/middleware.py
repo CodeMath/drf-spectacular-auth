@@ -5,12 +5,13 @@ Middleware for DRF Spectacular Auth
 import logging
 from typing import Optional
 
-from django.contrib.auth import login
+from django.contrib.auth import get_user_model, login
 from django.http import HttpRequest, HttpResponse
 from django.urls import resolve
 from django.utils.deprecation import MiddlewareMixin
 
 from .conf import auth_settings
+from .providers.cognito import CognitoAuthProvider
 
 logger = logging.getLogger(__name__)
 
@@ -45,7 +46,18 @@ class SpectacularAuthMiddleware(MiddlewareMixin):
                 login(request, user)
                 return None
 
-        # Check for session-based authentication
+        # Check for HttpOnly cookie-based authentication
+        if auth_settings.USE_HTTPONLY_COOKIE:
+            auth_token = request.COOKIES.get("auth_token")
+            if auth_token:
+                # Add Authorization header for API requests
+                request.META["HTTP_AUTHORIZATION"] = f"Bearer {auth_token}"
+                user = self._authenticate_with_token(auth_token)
+                if user:
+                    login(request, user)
+                    return None
+
+        # Check for session-based authentication (fallback)
         token = request.session.get("spectacular_auth_token")
         if token:
             user = self._authenticate_with_token(token)
@@ -77,16 +89,12 @@ class SpectacularAuthMiddleware(MiddlewareMixin):
         Authenticate user with JWT token
         """
         try:
-            from .providers.cognito import CognitoAuthProvider
-
             provider = CognitoAuthProvider()
 
             # Verify token and get user info
             user_info = provider.verify_token(token)
             if user_info:
                 # Try to get existing user or create a temporary one
-                from django.contrib.auth import get_user_model
-
                 User = get_user_model()
 
                 try:
@@ -107,8 +115,6 @@ class SpectacularAuthMiddleware(MiddlewareMixin):
         """
         Create a temporary user for documentation access
         """
-        from django.contrib.auth import get_user_model
-
         User = get_user_model()
 
         # Create a temporary user with minimal info
