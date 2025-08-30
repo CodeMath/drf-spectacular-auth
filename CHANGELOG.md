@@ -5,6 +5,55 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.2] - 2025-08-30
+
+### 🎯 **Dynamic Security Scheme Detection** - Universal Compatibility
+
+**Major improvement**: AUTO_AUTHORIZE now works with ANY custom security scheme name! No more hardcoded 'BearerAuth' limitations.
+
+### ✨ New Features
+- **🔍 OpenAPI Spec Analysis** - Automatically detects Bearer authentication schemes from your OpenAPI specification
+- **🎯 Universal Scheme Support** - Works with CognitoJWT, Bearer, JWT, ApiKeyAuth, TokenAuth, and any custom scheme name
+- **🛡️ Dual Detection System** - OpenAPI spec analysis + fallback testing for maximum reliability
+- **📊 Enhanced Logging** - Detailed console logging for debugging authentication setup
+
+### 🔧 Technical Improvements
+- **Smart Scheme Detection**: `detectBearerScheme()` function analyzes `window.ui.specSelectors.spec()`
+- **Fallback Mechanism**: Tests common scheme names when spec analysis fails
+- **Enhanced Error Handling**: Graceful fallback to original behavior on detection failure
+- **Consistent Authorization**: Both login and logout use dynamic scheme detection
+
+### 🏗️ Implementation Details
+```javascript
+// Method 1: OpenAPI spec analysis
+const spec = window.ui?.specSelectors?.spec()?.toJS();
+const bearerScheme = Object.keys(schemes).find(name => {
+    const scheme = schemes[name];
+    return scheme?.type === 'http' && scheme?.scheme === 'bearer';
+});
+
+// Method 2: Fallback testing
+const commonNames = ['BearerAuth', 'Bearer', 'JWT', 'CognitoJWT', 'ApiKeyAuth', 'TokenAuth'];
+```
+
+### 🎨 Supported Custom Schemes
+- **CognitoJWT**: AWS Cognito JWT authentication
+- **Bearer/BearerAuth**: Standard Bearer token schemes  
+- **JWT**: JSON Web Token schemes
+- **ApiKeyAuth**: API key-based authentication
+- **TokenAuth**: Generic token authentication
+- **Custom Names**: Any Bearer-type scheme defined in OpenAPI spec
+
+### 📚 Documentation Updates
+- **Custom Security Schemes**: Complete examples for APPEND_COMPONENTS and OpenApiAuthenticationExtension
+- **Troubleshooting**: Updated AUTO_AUTHORIZE guidance with scheme detection info
+- **Configuration Examples**: Real-world CognitoJWT setup examples
+
+### 🔄 Backward Compatibility
+- **100% Compatible**: Existing BearerAuth configurations continue working
+- **No Breaking Changes**: All existing functionality preserved
+- **Graceful Fallback**: Original hardcoded behavior as ultimate fallback
+
 ## [1.3.1] - 2025-08-30
 
 ### 🎯 **HttpOnly Cookie + AUTO_AUTHORIZE** - Seamless UX Enhancement

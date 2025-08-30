@@ -268,6 +268,42 @@ DRF_SPECTACULAR_AUTH = {
 }
 ```
 
+### Custom Security Schemes
+
+The package automatically detects your OpenAPI security schemes and supports custom names:
+
+```python
+# drf-spectacular settings
+SPECTACULAR_SETTINGS = {
+    "APPEND_COMPONENTS": {
+        "securitySchemes": {
+            "CognitoJWT": {
+                "type": "http",
+                "scheme": "bearer", 
+                "bearerFormat": "JWT",
+                "description": "AWS Cognito JWT authentication",
+            }
+        },
+    },
+    "SECURITY": [{"CognitoJWT": []}],
+}
+
+# Or using OpenApiAuthenticationExtension
+class CognitoJWTAuthenticationScheme(OpenApiAuthenticationExtension):
+    target_class = "your_app.authentication.CognitoJWTAuthentication"
+    name = "CognitoJWT"
+
+    def get_security_definition(self, auto_schema):
+        return {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT", 
+            "description": "AWS Cognito JWT authentication",
+        }
+```
+
+**Supported scheme names**: `CognitoJWT`, `BearerAuth`, `Bearer`, `JWT`, `ApiKeyAuth`, `TokenAuth`, and any custom name defined in your OpenAPI spec.
+
 ### Custom Templates
 
 ```python
@@ -290,7 +326,7 @@ A: Update to v1.2.0+ which fixes the template inheritance issue.
 A: Make sure you're using `SpectacularAuthSwaggerView` instead of the default Swagger view.
 
 **Q: Token not being auto-authorized in Swagger**  
-A: Verify that `AUTO_AUTHORIZE: True` is set in your settings and check browser console for errors.
+A: Verify that `AUTO_AUTHORIZE: True` is set in your settings and check browser console for errors. The system automatically detects your security scheme name from the OpenAPI spec, supporting custom names like `CognitoJWT`, `Bearer`, etc.
 
 **Q: AWS Cognito authentication fails**  
 A: Check your Cognito configuration:
