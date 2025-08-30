@@ -5,6 +5,7 @@
     // Configuration from Django template
     const CONFIG = {
         loginUrl: '{{ login_url }}',
+        logoutUrl: '{{ logout_url }}',
         csrfToken: '{{ csrf_token }}',
         language: '{{ language }}',
         autoAuthorize: {{ auth_settings.AUTO_AUTHORIZE|yesno:"true,false" }},
@@ -176,10 +177,20 @@
                 
                 document.getElementById('drf-login-form').reset();
                 
-                // For HttpOnly cookies, the token is automatically sent with requests
-                // so we don't need to set it in Swagger Authorization
-                if (CONFIG.autoAuthorize && !CONFIG.useHttpOnlyCookie) {
-                    setSwaggerAuthorization(data.access_token);
+                // Auto-authorize Swagger UI if enabled
+                if (CONFIG.autoAuthorize) {
+                    // Use swagger_token for HttpOnly cookie mode, access_token for storage mode
+                    const tokenForSwagger = CONFIG.useHttpOnlyCookie ? 
+                        data.swagger_token : data.access_token;
+                    
+                    if (tokenForSwagger) {
+                        setSwaggerAuthorization(tokenForSwagger);
+                        
+                        // Security: Clear swagger_token from memory after use (HttpOnly mode)
+                        if (CONFIG.useHttpOnlyCookie && data.swagger_token) {
+                            delete data.swagger_token;
+                        }
+                    }
                 }
             } else {
                 showMessage(data.error || getMessage('loginFailed'), 'error');
@@ -198,7 +209,7 @@
     async function handleLogout() {
         try {
             // Call logout endpoint to clear HttpOnly cookies
-            const response = await fetch('/api/auth/logout/', {
+            const response = await fetch(CONFIG.logoutUrl, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -441,8 +452,8 @@
         if (token && userInfo) {
             try {
                 updateAuthStatus(true, userInfo.email);
-                // Only set Swagger auth if not using HttpOnly cookies
-                if (CONFIG.autoAuthorize && !CONFIG.useHttpOnlyCookie) {
+                // Set Swagger auth for storage-based tokens (not HttpOnly cookies)
+                if (CONFIG.autoAuthorize && !CONFIG.useHttpOnlyCookie && token) {
                     setSwaggerAuthorization(token);
                 }
             } catch (error) {
@@ -453,6 +464,14 @@
                     storage.removeItem('drf_auth_access_token');
                     storage.removeItem('drf_auth_user_info');
                 }
+            }
+        } else if (CONFIG.useHttpOnlyCookie) {
+            // For HttpOnly cookies, check user_email cookie to determine auth status
+            const userEmail = getCookie('user_email');
+            if (userEmail) {
+                updateAuthStatus(true, userEmail);
+                // Note: Cannot auto-authorize Swagger on page load with HttpOnly cookies
+                // User needs to login to get the one-time swagger_token
             }
         }
     }
