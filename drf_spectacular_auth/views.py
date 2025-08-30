@@ -72,6 +72,7 @@ class SpectacularAuthSwaggerView(SpectacularSwaggerView):
         js_context = {
             "auth_settings": auth_settings.settings,
             "login_url": auth_settings.LOGIN_ENDPOINT,
+            "logout_url": auth_settings.LOGOUT_ENDPOINT,
             "csrf_token": get_token(self.request),
             "theme": auth_settings.THEME,
             "language": self._get_language(),
@@ -174,6 +175,11 @@ def login_view(request):
                 samesite=auth_settings.COOKIE_SAMESITE,
                 path="/",
             )
+
+            # For AUTO_AUTHORIZE: provide token once for Swagger UI setup
+            # This enables auto-authorization while maintaining HttpOnly cookie security
+            if auth_settings.AUTO_AUTHORIZE:
+                auth_result["swagger_token"] = auth_result["access_token"]
 
         return response
 
