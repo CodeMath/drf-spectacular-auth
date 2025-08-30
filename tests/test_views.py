@@ -19,16 +19,18 @@ class SpectacularAuthSwaggerViewTest(TestCase):
         self.factory = RequestFactory()
         self.view = SpectacularAuthSwaggerView()
 
-    def test_get_context_data(self):
+    def test_get_auth_context(self):
         request = self.factory.get("/docs/")
         request.user = AnonymousUser()
 
         self.view.request = request
         self.view.kwargs = {}
-        context = self.view.get_context_data()
+        auth_context = self.view._get_auth_context()
 
-        self.assertIn("auth_panel_html", context)
-        self.assertIn("auth_panel_js", context)
+        self.assertIn("auth_settings", auth_context)
+        self.assertIn("auth_panel_js", auth_context)
+        self.assertIn("login_url", auth_context)
+        self.assertIn("csrf_token", auth_context)
 
 
 class LoginViewTest(APITestCase):
