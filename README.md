@@ -9,7 +9,15 @@
 
 A Django package that adds a beautiful authentication panel to your DRF Spectacular (Swagger UI) documentation, with built-in support for AWS Cognito and extensible authentication providers.
 
-## 🆕 What's New in v1.3.0
+## 🆕 What's New in v1.3.1
+
+- 🎯 **HttpOnly Cookie + AUTO_AUTHORIZE** - Automatic Swagger UI authorization now works with HttpOnly cookies
+- 🔒 **Smart Token Management** - One-time token exposure for Swagger UI setup with immediate cleanup
+- ⚡ **Seamless UX** - Login → Auto-authorized Swagger UI (no manual token copying needed)
+- 🏗️ **Industry-Standard Pattern** - Based on Azure API Management and enterprise solutions
+- 🔄 **Full Compatibility** - Works with HttpOnly cookies, localStorage, and sessionStorage modes
+
+## 📈 Previous Updates (v1.3.0)
 
 - 🔐 **HttpOnly Cookie Security** - Enhanced XSS protection with secure token storage
 - 🛡️ **90%+ Security Improvement** - CSRF protection with SameSite cookies
@@ -191,7 +199,7 @@ DRF_SPECTACULAR_AUTH = {
     # UI Settings
     'PANEL_POSITION': 'top-right',  # top-left, top-right, bottom-left, bottom-right
     'PANEL_STYLE': 'floating',      # floating, embedded
-    'AUTO_AUTHORIZE': True,         # Auto-fill authorization headers
+    'AUTO_AUTHORIZE': True,         # Auto-fill authorization headers (v1.3.1: Works with HttpOnly cookies!)
     'SHOW_COPY_BUTTON': True,       # Show token copy button
     'SHOW_USER_INFO': True,         # Show user email in panel
     

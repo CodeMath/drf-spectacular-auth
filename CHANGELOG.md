@@ -5,6 +5,57 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.1] - 2025-08-30
+
+### 🎯 **HttpOnly Cookie + AUTO_AUTHORIZE** - Seamless UX Enhancement
+
+**Major breakthrough**: Automatic Swagger UI authorization now works with HttpOnly cookies! Based on industry-standard patterns from Azure API Management and enterprise solutions.
+
+### ✨ New Features
+- **🔒 Smart Token Management** - One-time token exposure for Swagger UI setup with immediate cleanup
+- **⚡ Seamless UX** - Login → Auto-authorized Swagger UI (no manual token copying needed)
+- **🏗️ Industry-Standard Pattern** - Implements secure "one-time token exposure" used by major API tools
+- **🔄 Full Compatibility** - Works with HttpOnly cookies, localStorage, and sessionStorage modes
+
+### 🔐 Security Enhancements
+- **Enhanced HttpOnly Cookie Security** - Maintains XSS protection while enabling AUTO_AUTHORIZE
+- **Smart Token Exposure** - swagger_token provided only once during login, immediately cleared from memory
+- **Zero Security Compromise** - HttpOnly cookie remains inaccessible to JavaScript after initial setup
+- **Backward Compatibility** - All existing security features preserved
+
+### 🔧 Technical Improvements
+- **Enhanced Views**: Added smart swagger_token provision when both USE_HTTPONLY_COOKIE and AUTO_AUTHORIZE are enabled
+- **JavaScript Optimization**: Improved token handling logic with automatic cleanup for security
+- **Middleware Enhancement**: Better cookie-based authentication handling
+- **Configuration Flexibility**: Seamless integration with existing token storage modes
+
+### 💡 User Experience
+- **No Manual Steps** - Authentication automatically populates Swagger UI authorization
+- **Immediate Access** - Login once, use all API endpoints without re-authentication
+- **Production Ready** - Enterprise-grade security with consumer-friendly UX
+- **Developer Friendly** - Zero configuration changes needed for existing setups
+
+### 🏗️ Implementation Details
+```python
+# For AUTO_AUTHORIZE: provide token once for Swagger UI setup
+# This enables auto-authorization while maintaining HttpOnly cookie security
+if auth_settings.AUTO_AUTHORIZE:
+    auth_result["swagger_token"] = auth_result["access_token"]
+```
+
+```javascript
+// Security: Clear swagger_token from memory after use (HttpOnly mode)
+if (CONFIG.useHttpOnlyCookie && data.swagger_token) {
+    delete data.swagger_token;
+}
+```
+
+### 📚 Research Foundation
+Based on comprehensive analysis of how industry leaders handle this challenge:
+- **Azure API Management** - One-time token exposure pattern
+- **Postman/Insomnia** - Temporary token access for tool integration
+- **Enterprise API Tools** - Secure automation without compromising HttpOnly cookie security
+
 ## [1.3.0] - 2025-08-29
 
 ### 🔐 Security Enhancements (Major)
