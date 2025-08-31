@@ -499,6 +499,19 @@
                         authInput.dispatchEvent(new Event('input', { bubbles: true }));
                         authInput.dispatchEvent(new Event('change', { bubbles: true }));
                         console.log('✅ Token set via DOM input field');
+                        
+                        // Auto-click the authorize button in the modal
+                        setTimeout(() => {
+                            const authorizeBtn = document.querySelector('.btn.modal-btn.auth.authorize, button[aria-label="Apply credentials"], .auth-btn-wrapper button[type="submit"]');
+                            if (authorizeBtn) {
+                                console.log('🔘 Auto-clicking Authorize button in modal');
+                                authorizeBtn.click();
+                                console.log('✅ Authorize button clicked - authentication should be applied');
+                            } else {
+                                console.log('⚠️ Authorize button not found in modal');
+                            }
+                        }, 200);
+                        
                         updateAuthorizationModal(token);
                         return;
                     }
@@ -517,14 +530,20 @@
                         if (modalInput) {
                             modalInput.value = `Bearer ${token}`;
                             modalInput.dispatchEvent(new Event('input', { bubbles: true }));
+                            modalInput.dispatchEvent(new Event('change', { bubbles: true }));
                             console.log('✅ Token set in authorization modal');
                             
                             // Try to find and click authorize/login button in modal
-                            const modalBtn = authModal.querySelector('button[class*="authorize"], button[class*="auth"], .btn-auth');
-                            if (modalBtn) {
-                                modalBtn.click();
-                                console.log('🔘 Clicked authorization button in modal');
-                            }
+                            setTimeout(() => {
+                                const modalBtn = authModal.querySelector('button[class*="authorize"], button[class*="auth"], .btn-auth, .btn.modal-btn.auth.authorize');
+                                if (modalBtn) {
+                                    console.log('🔘 Auto-clicking authorization button in modal');
+                                    modalBtn.click();
+                                    console.log('✅ Authorization button clicked in modal');
+                                } else {
+                                    console.log('⚠️ Authorization button not found in modal');
+                                }
+                            }, 200);
                             return;
                         }
                     }
@@ -555,6 +574,16 @@
                             input.dispatchEvent(new Event('input', { bubbles: true }));
                             input.dispatchEvent(new Event('change', { bubbles: true }));
                             console.log('✅ Token set via pattern matching');
+                            
+                            // Try to find and click nearby authorize button
+                            setTimeout(() => {
+                                const nearbyBtn = input.closest('form, .auth-container, .modal-ux-content')?.querySelector('.btn.modal-btn.auth.authorize, button[type="submit"]');
+                                if (nearbyBtn) {
+                                    console.log('🔘 Auto-clicking nearby authorize button');
+                                    nearbyBtn.click();
+                                    console.log('✅ Nearby authorize button clicked');
+                                }
+                            }, 200);
                             return;
                         }
                     }
@@ -578,7 +607,18 @@
                                 console.log(`📝 Found ${modalInputs.length} visible inputs after clicking authorize`);
                                 modalInputs[0].value = `Bearer ${token}`;
                                 modalInputs[0].dispatchEvent(new Event('input', { bubbles: true }));
+                                modalInputs[0].dispatchEvent(new Event('change', { bubbles: true }));
                                 console.log('✅ Token set in opened authorization modal');
+                                
+                                // Auto-click the authorize button in the opened modal
+                                setTimeout(() => {
+                                    const modalAuthorizeBtn = document.querySelector('.btn.modal-btn.auth.authorize, button[aria-label="Apply credentials"]');
+                                    if (modalAuthorizeBtn) {
+                                        console.log('🔘 Auto-clicking Authorize button in opened modal');
+                                        modalAuthorizeBtn.click();
+                                        console.log('✅ Final authorization completed');
+                                    }
+                                }, 300);
                             }
                         }, 500);
                     } catch (e) {

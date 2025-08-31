@@ -5,6 +5,68 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.8] - 2025-08-31
+
+### 🎯 **Complete Auto-Authorization** - One-Click Authentication Flow
+
+**Final enhancement**: Complete automation of the entire authorization flow including automatic Authorize button clicking in modals.
+
+### ✨ Complete Automation Features
+- **🔘 Auto-Click Authorize Button** - Automatically clicks the "Authorize" button in authentication modals
+- **⚡ Complete Flow Automation** - Full end-to-end authentication without manual intervention
+- **📱 Modal Form Submission** - Automatically submits authorization forms after token input
+- **🎯 Multi-Stage Button Handling** - Handles both initial and modal authorize buttons
+- **⏱️ Smart Timing** - Optimal delays for modal loading and form processing
+
+### 🔧 Technical Improvements
+- **Auto-Authorization Flow**:
+  ```javascript
+  // After setting token, auto-click authorize button
+  setTimeout(() => {
+      const authorizeBtn = document.querySelector('.btn.modal-btn.auth.authorize, button[aria-label="Apply credentials"]');
+      if (authorizeBtn) {
+          console.log('🔘 Auto-clicking Authorize button in modal');
+          authorizeBtn.click();
+          console.log('✅ Authorize button clicked - authentication should be applied');
+      }
+  }, 200);
+  ```
+- **Form Integration**: Handles both `<form>` submission and direct button clicking
+- **Smart Selectors**: Multiple selector patterns for different Swagger UI versions
+- **Timing Optimization**: 200ms delay for input processing, 300-500ms for modal handling
+
+### 🎯 Complete Authorization Sequence
+1. **Login Success** → Token extracted from response ✅
+2. **DOM Detection** → Input field found and populated ✅  
+3. **Auto-Authorization** → **NEW: Authorize button automatically clicked** 🆕
+4. **Modal Handling** → Form submitted and authentication applied ✅
+5. **API Ready** → All subsequent API calls are authenticated ✅
+
+### 💡 Enhanced User Experience
+```javascript
+✅ Token set via DOM input field
+🔘 Auto-clicking Authorize button in modal
+✅ Authorize button clicked - authentication should be applied
+✅ Final authorization completed
+```
+
+### 🔄 What This Completes
+- **Zero Manual Steps**: Complete automation from login to authenticated API access
+- **Modal Form Handling**: Automatic form submission in authorization modals
+- **Universal Compatibility**: Works across different modal structures and button layouts
+- **Seamless Experience**: Users see immediate authentication without any manual intervention
+
+### 🎉 Full AUTO_AUTHORIZE Implementation
+Now truly provides "one-click" authentication experience:
+- Login with drf-spectacular-auth panel
+- **Everything else happens automatically**
+- Start making authenticated API calls immediately
+
+### 🔄 Backward Compatibility
+- **100% Compatible**: All previous functionality maintained
+- **Enhanced Automation**: Builds on existing DOM manipulation success
+- **Zero Breaking Changes**: Pure enhancement release
+
 ## [1.3.7] - 2025-08-31
 
 ### 🎯 **Advanced DOM Authorization** - DRF Spectacular Compatibility
