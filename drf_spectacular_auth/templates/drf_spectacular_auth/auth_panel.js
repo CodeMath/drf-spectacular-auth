@@ -370,23 +370,42 @@
 
     // Set Swagger authorization with dynamic scheme detection
     function setSwaggerAuthorization(token) {
+        let retryCount = 0;
+        const maxRetries = 20; // 10 seconds total (500ms * 20)
+        
         const checkUI = () => {
-            console.log('Checking UI');
-            console.log('window.ui', window.ui);
-            console.log('window.ui.preauthorizeApiKey', window.ui.preauthorizeApiKey);
-            if (window.ui && window.ui.preauthorizeApiKey) {
-                const schemeName = detectBearerScheme();
-                if (schemeName) {
-                    window.ui.preauthorizeApiKey(schemeName, token);
-                    console.log(`Swagger authorization set successfully with scheme: ${schemeName}`);
-                    updateAuthorizationModal(token);
-                } else {
-                    console.warn('No Bearer authentication scheme found in OpenAPI spec');
+            console.log('Checking UI (attempt', retryCount + 1, '/' + maxRetries + ')');
+            
+            try {
+                console.log('window.ui', typeof window.ui);
+                
+                if (window.ui && typeof window.ui.preauthorizeApiKey === 'function') {
+                    console.log('✅ Swagger UI is ready');
+                    const schemeName = detectBearerScheme();
+                    if (schemeName) {
+                        window.ui.preauthorizeApiKey(schemeName, token);
+                        console.log(`🎯 Swagger authorization set successfully with scheme: ${schemeName}`);
+                        updateAuthorizationModal(token);
+                    } else {
+                        console.warn('⚠️ No Bearer authentication scheme found in OpenAPI spec');
+                    }
+                    return; // Success, exit retry loop
                 }
-            } else {
+            } catch (error) {
+                console.log('🔍 UI check error (will retry):', error.message);
+            }
+            
+            // Retry logic
+            retryCount++;
+            if (retryCount < maxRetries) {
+                console.log('⏳ Swagger UI not ready, retrying in 500ms...');
                 setTimeout(checkUI, 500);
+            } else {
+                console.error('❌ Failed to access Swagger UI after', maxRetries, 'attempts');
+                console.error('💡 This might indicate Swagger UI loading issues');
             }
         };
+        
         checkUI();
     }
 

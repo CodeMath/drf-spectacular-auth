@@ -5,6 +5,41 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.5] - 2025-08-31
+
+### 🔧 **Swagger UI Loading Fix** - Enhanced Error Handling
+
+**Critical fix**: Improved error handling for Swagger UI initialization timing issues.
+
+### 🛠️ Bug Fixes
+- **🔄 Enhanced Retry Logic** - Fixed TypeError when window.ui is undefined during Swagger UI loading
+- **📊 Better Error Handling** - Added try-catch around Swagger UI access with detailed logging
+- **⏱️ Improved Timing** - Increased retry attempts (20x) for slower Swagger UI initialization
+- **🔍 Enhanced Debugging** - More detailed console logs for troubleshooting UI loading issues
+
+### 🔧 Technical Improvements
+- **Error-Safe UI Checking**:
+  ```javascript
+  try {
+      if (window.ui && typeof window.ui.preauthorizeApiKey === 'function') {
+          // Safe access with type checking
+      }
+  } catch (error) {
+      console.log('🔍 UI check error (will retry):', error.message);
+  }
+  ```
+- **Robust Retry Mechanism**: 20 attempts over 10 seconds for UI readiness
+- **Graceful Degradation**: Clear error messages when Swagger UI fails to load
+
+### 🎯 What This Fixes
+- **TypeError Prevention**: No more "Cannot read properties of undefined" errors
+- **Better Reliability**: AUTO_AUTHORIZE works consistently across different loading speeds
+- **Enhanced Debugging**: Clear console logs to diagnose Swagger UI loading issues
+
+### 🔄 Backward Compatibility
+- **100% Compatible**: All existing functionality preserved
+- **Zero Breaking Changes**: Pure bug fix release
+
 ## [1.3.4] - 2025-08-31
 
 ### 🎯 **Flexible Token Handling & UI Improvements** - Better Compatibility
