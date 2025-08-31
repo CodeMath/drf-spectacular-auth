@@ -5,6 +5,106 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2025-08-31
+
+### 🔄 **Major Rollback** - Simplified SessionStorage Authentication
+
+**Breaking Change**: Complete removal of HttpOnly cookie functionality. Return to simple, reliable sessionStorage + token copy approach.
+
+### 💡 Why This Change?
+
+After extensive development through v1.3.1 to v1.3.10 with complex HttpOnly cookie implementations, DOM manipulation for AUTO_AUTHORIZE, and sophisticated error handling, we've determined that **simplicity is more valuable than complexity** for this use case.
+
+**Key Realizations**:
+- **Compatibility Issues**: HttpOnly cookies + AUTO_AUTHORIZE created complex compatibility challenges
+- **Production Complexity**: DOM manipulation for Swagger UI authorization proved fragile across different environments
+- **Maintenance Burden**: Complex error handling and retry logic became difficult to maintain
+- **User Experience**: Simple token copy is often more reliable and transparent for developers
+
+### 🗑️ Removed Features
+- **HttpOnly Cookie Support**: Complete removal of `USE_HTTPONLY_COOKIE` functionality
+- **Complex AUTO_AUTHORIZE**: Removed sophisticated DOM manipulation and two-stage authorization
+- **Advanced Error Handling**: Simplified error handling removing Swagger UI internal error recovery
+- **Cookie Middleware**: Removed cookie-based authentication middleware integration
+- **Complex Token Exposure**: Removed one-time token exposure patterns for HttpOnly compatibility
+
+### ✅ Retained Features
+- **SessionStorage Token Storage**: Simple, reliable browser-based token storage
+- **Basic AUTO_AUTHORIZE**: Simple preauthorizeApiKey() with common security schemes
+- **Token Copy Functionality**: Manual token copy with clipboard integration
+- **Manual Copy Modal**: Fallback modal for manual token selection
+- **CSRF Protection**: Django CSRF token integration (simplified)
+- **User Authentication Status**: Visual authentication status indicators
+- **Multi-language Support**: Korean, English, Japanese localization
+
+### 🛠️ Simplified Configuration
+
+**Before (v1.3.x)**:
+```python
+DRF_SPECTACULAR_AUTH = {
+    "USE_HTTPONLY_COOKIE": True,
+    "COOKIE_SAMESITE": "Lax",
+    "COOKIE_SECURE": True,
+    "AUTO_AUTHORIZE": True,
+    "DEBUG_MODE": True,
+    "AUTHORIZATION_RETRY_COUNT": 3,
+    # ... many more complex settings
+}
+```
+
+**After (v1.4.0)**:
+```python
+DRF_SPECTACULAR_AUTH = {
+    "TOKEN_STORAGE": "sessionStorage",  # or "localStorage"
+    "AUTO_AUTHORIZE": True,  # Simple preauthorizeApiKey
+    "SHOW_COPY_BUTTON": True,
+    "CSRF_PROTECTION": True,
+}
+```
+
+### 🎯 What This Provides
+- **Reliability**: Proven sessionStorage approach without complex edge cases
+- **Transparency**: Users can see and control their authentication tokens
+- **Compatibility**: Works with all Swagger UI versions without DOM dependencies
+- **Maintainability**: Much simpler codebase focused on core functionality
+- **Performance**: Minimal JavaScript footprint without complex retry logic
+
+### 📊 Technical Changes
+- **auth_panel.js**: Complete rewrite to simple sessionStorage + basic authorization
+- **views.py**: Removed HttpOnly cookie logic from login/logout endpoints
+- **conf.py**: Simplified configuration removing cookie-related settings
+- **Token Handling**: Direct sessionStorage/localStorage with simple retrieval
+
+### 🚀 Migration Guide
+
+**From v1.3.x to v1.4.0**:
+
+1. **Remove Complex Settings**:
+   ```python
+   # Remove these from your settings
+   # "USE_HTTPONLY_COOKIE": True,
+   # "COOKIE_SAMESITE": "Lax", 
+   # "COOKIE_SECURE": True,
+   # "DEBUG_MODE": True,
+   ```
+
+2. **Simplified Settings**:
+   ```python
+   DRF_SPECTACULAR_AUTH = {
+       "TOKEN_STORAGE": "sessionStorage",  # Choose storage method
+       "AUTO_AUTHORIZE": True,             # Keep if desired
+       "SHOW_COPY_BUTTON": True,          # Keep token copy functionality
+   }
+   ```
+
+3. **Client-Side**: No changes needed - authentication will work automatically
+
+### 🎯 Version Philosophy
+- **v1.3.x**: Complex feature-rich approach with edge case handling
+- **v1.4.0**: Simple, reliable approach prioritizing maintainability and compatibility
+
+This major version represents a **strategic simplification** - sometimes the best solution is the simplest one that works reliably across all environments.
+
 ## [1.3.10] - 2025-08-31
 
 ### 🛡️ **Enhanced Error Handling** - Swagger UI Internal Error Resilience
