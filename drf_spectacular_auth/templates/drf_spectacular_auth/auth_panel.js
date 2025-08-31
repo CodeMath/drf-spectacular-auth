@@ -496,8 +496,13 @@
                         const authorizeBtn = document.querySelector('.btn.modal-btn.auth.authorize, button[aria-label="Apply credentials"]');
                         if (authorizeBtn) {
                             console.log('🔘 Auto-clicking Authorize button in existing modal');
-                            authorizeBtn.click();
-                            console.log('✅ Authorization completed in existing modal');
+                            try {
+                                authorizeBtn.click();
+                                console.log('✅ Authorization completed in existing modal');
+                            } catch (error) {
+                                console.log('⚠️ Swagger UI internal error:', error.message);
+                                console.log('💡 Authorization may still be successful despite the error');
+                            }
                         }
                     }, 200);
                     
@@ -524,14 +529,35 @@
                             modalInput.dispatchEvent(new Event('change', { bubbles: true }));
                             console.log('✅ Token set in opened modal');
                             
-                            // Step 3: Auto-click the authorize button inside the modal
+                            // Step 3: Auto-click the authorize button inside the modal with error handling
                             setTimeout(() => {
                                 const modalAuthorizeBtn = document.querySelector('.btn.modal-btn.auth.authorize, button[aria-label="Apply credentials"], .auth-btn-wrapper button[type="submit"]');
                                 if (modalAuthorizeBtn) {
                                     console.log('🔘 Auto-clicking Authorize button inside modal');
-                                    modalAuthorizeBtn.click();
-                                    console.log('✅ Final authorization completed - modal should close');
-                                    updateAuthorizationModal(token);
+                                    
+                                    // Wrap in try-catch to handle Swagger UI internal errors
+                                    try {
+                                        modalAuthorizeBtn.click();
+                                        console.log('✅ Final authorization completed - modal should close');
+                                        updateAuthorizationModal(token);
+                                        
+                                        // Additional verification: check if authentication was applied
+                                        setTimeout(() => {
+                                            const isAuthorized = document.querySelector('.btn.authorize.locked, .authorize.authenticated') || 
+                                                                document.querySelector('.auth-wrapper .btn.authorize').textContent?.includes('Logout');
+                                            if (isAuthorized) {
+                                                console.log('🎯 Authorization verified - API calls should now be authenticated');
+                                            } else {
+                                                console.log('⚠️ Authorization status unclear - check manually');
+                                            }
+                                        }, 1000);
+                                        
+                                    } catch (error) {
+                                        console.log('⚠️ Swagger UI internal error during authorization:', error.message);
+                                        console.log('💡 This is usually harmless - authorization may still be successful');
+                                        console.log('🔧 Try making an API call to verify authentication status');
+                                        updateAuthorizationModal(token);
+                                    }
                                 } else {
                                     console.log('⚠️ Modal Authorize button not found');
                                 }
