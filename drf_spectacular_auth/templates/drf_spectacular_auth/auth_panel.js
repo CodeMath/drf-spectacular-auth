@@ -159,11 +159,11 @@
 
     // UI Update functions
     function updateAuthStatus(isAuthenticated, userEmail = '') {
-        const authIndicator = document.querySelector('#auth-indicator');
-        const authText = document.querySelector('#auth-text');
-        const loginForm = document.querySelector('#login-form');
-        const logoutBtn = document.querySelector('#logout-btn');
-        const copyTokenBtn = document.querySelector('#copy-token-btn');
+        const authIndicator = document.querySelector('#drf-auth-indicator');
+        const authText = document.querySelector('#drf-auth-text');
+        const loginForm = document.querySelector('#drf-login-form');
+        const logoutBtn = document.querySelector('#drf-logout-btn');
+        const copyTokenBtn = document.querySelector('#drf-copy-token-btn');
 
         if (isAuthenticated) {
             if (authIndicator) authIndicator.classList.add('authenticated');
@@ -173,20 +173,22 @@
             if (copyTokenBtn && CONFIG.showCopyButton) {
                 copyTokenBtn.style.display = 'inline-block';
             }
+            console.log('✅ UI updated for authenticated state');
         } else {
             if (authIndicator) authIndicator.classList.remove('authenticated');
             if (authText) authText.textContent = getMessage('unauthenticated');
-            if (loginForm) loginForm.style.display = 'block';
+            if (loginForm) loginForm.style.display = 'flex';
             if (logoutBtn) logoutBtn.style.display = 'none';
             if (copyTokenBtn) copyTokenBtn.style.display = 'none';
+            console.log('✅ UI updated for unauthenticated state');
         }
     }
 
     function showMessage(message, isError = false) {
-        const messageEl = document.querySelector('#auth-message');
+        const messageEl = document.querySelector('#drf-status-message');
         if (messageEl) {
             messageEl.textContent = message;
-            messageEl.className = isError ? 'auth-message error' : 'auth-message success';
+            messageEl.className = isError ? 'drf-auth-message error' : 'drf-auth-message success';
             messageEl.style.display = 'block';
             
             setTimeout(() => {
@@ -199,8 +201,8 @@
     function handleLogin(event) {
         event.preventDefault();
         
-        const email = document.querySelector('#auth-email').value;
-        const password = document.querySelector('#auth-password').value;
+        const email = document.querySelector('#drf-email').value;
+        const password = document.querySelector('#drf-password').value;
         
         if (!email || !password) {
             showMessage(getMessage('loginFailed'), true);
@@ -249,8 +251,8 @@
                 }
                 
                 // Clear form
-                document.querySelector('#auth-email').value = '';
-                document.querySelector('#auth-password').value = '';
+                document.querySelector('#drf-email').value = '';
+                document.querySelector('#drf-password').value = '';
                 
             } else {
                 showMessage(data.error || getMessage('loginFailed'), true);
@@ -309,7 +311,7 @@
             showMessage(getMessage('tokenCopied'));
             
             // Temporary visual feedback
-            const copyBtn = document.querySelector('#copy-token-btn');
+            const copyBtn = document.querySelector('#drf-copy-token-btn');
             if (copyBtn) {
                 const originalText = copyBtn.textContent;
                 copyBtn.textContent = getMessage('copied');
@@ -361,19 +363,24 @@
         });
         
         // Set up event listeners
-        const loginForm = document.querySelector('#login-form');
+        const loginForm = document.querySelector('#drf-login-form');
         if (loginForm) {
             loginForm.addEventListener('submit', handleLogin);
+            console.log('✅ Login form event listener attached');
+        } else {
+            console.log('❌ Login form not found');
         }
 
-        const logoutBtn = document.querySelector('#logout-btn');
+        const logoutBtn = document.querySelector('#drf-logout-btn');
         if (logoutBtn) {
             logoutBtn.addEventListener('click', handleLogout);
+            console.log('✅ Logout button event listener attached');
         }
 
-        const copyTokenBtn = document.querySelector('#copy-token-btn');
+        const copyTokenBtn = document.querySelector('#drf-copy-token-btn');
         if (copyTokenBtn && CONFIG.showCopyButton) {
             copyTokenBtn.addEventListener('click', handleCopyToken);
+            console.log('✅ Copy token button event listener attached');
         }
 
         // Check for existing authentication

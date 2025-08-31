@@ -46,23 +46,7 @@ class SpectacularAuthMiddleware(MiddlewareMixin):
                 login(request, user)
                 return None
 
-        # Check for HttpOnly cookie-based authentication
-        if auth_settings.USE_HTTPONLY_COOKIE:
-            auth_token = request.COOKIES.get("auth_token")
-            if auth_token:
-                # Add Authorization header for API requests
-                request.META["HTTP_AUTHORIZATION"] = f"Bearer {auth_token}"
-                user = self._authenticate_with_token(auth_token)
-                if user:
-                    login(request, user)
-                    return None
-
-        # Check for session-based authentication (fallback)
-        token = request.session.get("spectacular_auth_token")
-        if token:
-            user = self._authenticate_with_token(token)
-            if user:
-                login(request, user)
+        # No session-based authentication - use sessionStorage on client side only
 
         return None
 
