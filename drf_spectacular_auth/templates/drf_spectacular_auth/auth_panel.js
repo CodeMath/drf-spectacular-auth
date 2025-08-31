@@ -138,7 +138,8 @@
             logoutBtn.addEventListener('click', handleLogout);
         }
 
-        if (copyTokenBtn && CONFIG.showCopyButton) {
+        // Only enable Copy Token button in non-HttpOnly cookie mode
+        if (copyTokenBtn && CONFIG.showCopyButton && !CONFIG.useHttpOnlyCookie) {
             copyTokenBtn.addEventListener('click', handleCopyToken);
         }
     }
@@ -190,12 +191,14 @@
                 if (CONFIG.autoAuthorize) {
                     console.log('✅ AUTO_AUTHORIZE is enabled');
                     
-                    // Use swagger_token for HttpOnly cookie mode, access_token for storage mode
+                    // Use swagger_token if available (v1.3.1+), fallback to access_token
+                    // This allows both server implementations to work
                     const tokenForSwagger = CONFIG.useHttpOnlyCookie ? 
-                        data.swagger_token : data.access_token;
+                        (data.swagger_token || data.access_token) : data.access_token;
                     
                     console.log('Token for Swagger:', tokenForSwagger ? 'EXISTS' : 'MISSING');
-                    console.log('Expected token field:', CONFIG.useHttpOnlyCookie ? 'swagger_token' : 'access_token');
+                    console.log('Available fields:', Object.keys(data));
+                    console.log('Using token from:', data.swagger_token ? 'swagger_token' : 'access_token');
                     
                     if (tokenForSwagger) {
                         console.log('🚀 Calling setSwaggerAuthorization with token');
@@ -209,11 +212,7 @@
                     } else {
                         console.error('❌ NO TOKEN AVAILABLE for AUTO_AUTHORIZE');
                         console.error('Available data keys:', Object.keys(data));
-                        if (CONFIG.useHttpOnlyCookie) {
-                            console.error('Expected: data.swagger_token (HttpOnly mode)');
-                        } else {
-                            console.error('Expected: data.access_token (storage mode)');
-                        }
+                        console.error('Note: Both swagger_token and access_token are missing');
                     }
                 } else {
                     console.log('❌ AUTO_AUTHORIZE is disabled in CONFIG');
@@ -340,7 +339,12 @@
             }
             if (loginForm) loginForm.style.display = 'none';
             if (logoutBtn) logoutBtn.style.display = 'inline-block';
-            if (copyTokenBtn && CONFIG.showCopyButton) copyTokenBtn.style.display = 'inline-block';
+            // Only show Copy Token button in non-HttpOnly cookie mode
+            if (copyTokenBtn && CONFIG.showCopyButton && !CONFIG.useHttpOnlyCookie) {
+                copyTokenBtn.style.display = 'inline-block';
+            } else if (copyTokenBtn) {
+                copyTokenBtn.style.display = 'none';
+            }
         } else {
             if (authIndicator) authIndicator.classList.remove('authenticated');
             if (authText) authText.textContent = getMessage('unauthenticated');

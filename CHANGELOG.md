@@ -5,6 +5,59 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.4] - 2025-08-31
+
+### 🎯 **Flexible Token Handling & UI Improvements** - Better Compatibility
+
+**Major improvements**: AUTO_AUTHORIZE now works with standard access_token responses, and Copy Token button is hidden in HttpOnly mode.
+
+### ✨ New Features
+- **🔄 Flexible Token Fallback** - AUTO_AUTHORIZE works with both swagger_token and access_token
+- **🎨 Smart UI Behavior** - Copy Token button automatically hidden in HttpOnly Cookie mode
+- **🔧 Better API Compatibility** - Works with custom authentication endpoints without modification
+- **📊 Enhanced Debugging** - Shows which token field is being used
+
+### 🔧 Technical Improvements
+- **Token Detection Logic**:
+  ```javascript
+  // Now supports both patterns
+  const tokenForSwagger = CONFIG.useHttpOnlyCookie ? 
+      (data.swagger_token || data.access_token) : data.access_token;
+  ```
+- **Copy Token Button**: 
+  - Hidden when `useHttpOnlyCookie: true` (no JavaScript access to token)
+  - Visible only for localStorage/sessionStorage modes
+- **Backward Compatibility**: Existing swagger_token implementations continue to work
+
+### 🎯 What This Solves
+- **No Server Changes Needed**: Works with existing API endpoints that return access_token
+- **Cleaner UI**: No confusing "Copy Token" button when tokens are HttpOnly
+- **Better Developer Experience**: AUTO_AUTHORIZE works out of the box with custom auth
+
+### 💡 Usage Scenarios
+
+**Custom API Endpoint** (No changes needed):
+```python
+return Response({
+    "access_token": token,  # Works directly!
+    "user": user_info
+})
+```
+
+**With swagger_token** (Also supported):
+```python
+return Response({
+    "access_token": token,
+    "swagger_token": token,  # Optional, for explicit control
+    "user": user_info
+})
+```
+
+### 🔄 Backward Compatibility
+- **100% Compatible**: All existing configurations work unchanged
+- **Graceful Fallback**: Automatically uses available token field
+- **No Breaking Changes**: Pure enhancement release
+
 ## [1.3.3] - 2025-08-30
 
 ### 🔍 **Enhanced Debugging & Diagnostics** - AUTO_AUTHORIZE Troubleshooting
