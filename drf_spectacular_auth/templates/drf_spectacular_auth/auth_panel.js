@@ -371,26 +371,97 @@
     // Set Swagger authorization with dynamic scheme detection
     function setSwaggerAuthorization(token) {
         let retryCount = 0;
-        const maxRetries = 20; // 10 seconds total (500ms * 20)
+        const maxRetries = 30; // 15 seconds total (500ms * 30)
         
         const checkUI = () => {
-            console.log('Checking UI (attempt', retryCount + 1, '/' + maxRetries + ')');
+            console.log('🔍 Checking UI (attempt', retryCount + 1, '/' + maxRetries + ')');
             
             try {
-                console.log('window.ui', typeof window.ui);
+                // Enhanced UI detection - check multiple possible UI objects
+                console.log('🔎 Scanning for Swagger UI objects...');
+                console.log('window.ui:', typeof window.ui);
+                console.log('window.swaggerUi:', typeof window.swaggerUi);
+                console.log('window.SwaggerUIBundle:', typeof window.SwaggerUIBundle);
+                
+                // Check for any script tags or DOM elements that might indicate Swagger UI
+                const swaggerScripts = document.querySelectorAll('script[src*="swagger"]');
+                const swaggerElements = document.querySelectorAll('[id*="swagger"], [class*="swagger"]');
+                console.log('📄 Swagger scripts found:', swaggerScripts.length);
+                console.log('🎨 Swagger DOM elements found:', swaggerElements.length);
+                
+                // Try different UI object patterns
+                let uiObject = null;
+                let methodName = 'preauthorizeApiKey';
                 
                 if (window.ui && typeof window.ui.preauthorizeApiKey === 'function') {
-                    console.log('✅ Swagger UI is ready');
-                    const schemeName = detectBearerScheme();
+                    uiObject = window.ui;
+                    console.log('✅ Found window.ui with preauthorizeApiKey');
+                } else if (window.swaggerUi && typeof window.swaggerUi.preauthorizeApiKey === 'function') {
+                    uiObject = window.swaggerUi;
+                    console.log('✅ Found window.swaggerUi with preauthorizeApiKey');
+                } else if (window.SwaggerUIBundle) {
+                    console.log('⚠️ Found SwaggerUIBundle but no direct preauthorizeApiKey access');
+                    // Try to find any UI instance
+                    const possibleUIs = Object.keys(window).filter(key => 
+                        key.toLowerCase().includes('swagger') || 
+                        key.toLowerCase().includes('ui')
+                    );
+                    console.log('🔍 Possible UI objects:', possibleUIs);
+                    
+                    for (const key of possibleUIs) {
+                        if (window[key] && typeof window[key].preauthorizeApiKey === 'function') {
+                            uiObject = window[key];
+                            console.log(`✅ Found ${key} with preauthorizeApiKey`);
+                            break;
+                        }
+                    }
+                }
+                
+                if (uiObject) {
+                    console.log('🎯 Swagger UI object found, attempting authorization...');
+                    const schemeName = detectBearerScheme(uiObject);
                     if (schemeName) {
-                        window.ui.preauthorizeApiKey(schemeName, token);
-                        console.log(`🎯 Swagger authorization set successfully with scheme: ${schemeName}`);
+                        uiObject.preauthorizeApiKey(schemeName, token);
+                        console.log(`✅ Swagger authorization set successfully with scheme: ${schemeName}`);
                         updateAuthorizationModal(token);
                     } else {
                         console.warn('⚠️ No Bearer authentication scheme found in OpenAPI spec');
+                        // Try common scheme names as fallback
+                        const commonSchemes = ['BearerAuth', 'Bearer', 'JWT', 'CognitoJWT'];
+                        for (const scheme of commonSchemes) {
+                            try {
+                                uiObject.preauthorizeApiKey(scheme, token);
+                                console.log(`✅ Authorization set with fallback scheme: ${scheme}`);
+                                updateAuthorizationModal(token);
+                                break;
+                            } catch (e) {
+                                console.log(`❌ Failed with scheme ${scheme}:`, e.message);
+                            }
+                        }
                     }
                     return; // Success, exit retry loop
                 }
+                
+                // Last resort: try to manually set authorization header in the DOM
+                console.log('❌ No suitable Swagger UI object found, trying DOM manipulation...');
+                const authInput = document.querySelector('input[placeholder*="Bearer"], input[name*="Authorization"], input[id*="auth"]');
+                if (authInput) {
+                    authInput.value = `Bearer ${token}`;
+                    authInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    console.log('✅ Token set via DOM input field');
+                    updateAuthorizationModal(token);
+                    return;
+                }
+                
+                // Try to find authorize button and trigger it
+                const authorizeBtn = document.querySelector('button[class*="authorize"], button[id*="authorize"], .btn-authorize');
+                if (authorizeBtn) {
+                    console.log('🔘 Found authorize button, manual authorization may be needed');
+                    console.log('💡 Token available for manual entry:', token.substring(0, 20) + '...');
+                }
+                
+                console.log('❌ No suitable Swagger UI object found');
+                
             } catch (error) {
                 console.log('🔍 UI check error (will retry):', error.message);
             }
@@ -398,11 +469,18 @@
             // Retry logic
             retryCount++;
             if (retryCount < maxRetries) {
-                console.log('⏳ Swagger UI not ready, retrying in 500ms...');
+                console.log('⏳ Swagger UI not ready, retrying in 500ms... (' + retryCount + '/' + maxRetries + ')');
                 setTimeout(checkUI, 500);
             } else {
-                console.error('❌ Failed to access Swagger UI after', maxRetries, 'attempts');
-                console.error('💡 This might indicate Swagger UI loading issues');
+                console.error('❌ Failed to access Swagger UI after', maxRetries, 'attempts (15 seconds)');
+                console.error('💡 Possible causes:');
+                console.error('   - Swagger UI not fully loaded');
+                console.error('   - Different Swagger UI version or configuration');
+                console.error('   - Custom Swagger UI implementation');
+                console.error('📊 Environment info:');
+                console.error('   - User Agent:', navigator.userAgent);
+                console.error('   - Page URL:', window.location.href);
+                console.error('   - Available window objects:', Object.keys(window).filter(k => k.toLowerCase().includes('swagger') || k.toLowerCase().includes('ui')));
             }
         };
         
@@ -410,10 +488,10 @@
     }
 
     // Detect Bearer authentication scheme from OpenAPI spec
-    function detectBearerScheme() {
+    function detectBearerScheme(uiObject) {
         try {
             // Method 1: Extract from Swagger UI spec
-            const spec = window.ui?.specSelectors?.spec()?.toJS();
+            const spec = uiObject?.specSelectors?.spec()?.toJS();
             if (spec?.components?.securitySchemes) {
                 const schemes = spec.components.securitySchemes;
                 
@@ -537,7 +615,7 @@
     // Clear Swagger authorization
     function clearSwaggerAuthorization() {
         if (window.ui && window.ui.preauthorizeApiKey) {
-            const schemeName = detectBearerScheme();
+            const schemeName = detectBearerScheme(window.ui);
             if (schemeName) {
                 window.ui.preauthorizeApiKey(schemeName, '');
                 console.log(`Swagger authorization cleared for scheme: ${schemeName}`);

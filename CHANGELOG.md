@@ -5,6 +5,68 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.6] - 2025-08-31
+
+### 🔧 **Enhanced Swagger UI Detection** - Multi-Pattern Access & DOM Fallback
+
+**Major improvement**: Comprehensive Swagger UI detection with multiple access patterns and DOM fallback methods.
+
+### ✨ Enhanced Features
+- **🔍 Multi-Pattern UI Detection** - Checks window.ui, window.swaggerUi, window.SwaggerUIBundle
+- **🎯 Dynamic Object Discovery** - Scans all window objects for Swagger-related instances
+- **📊 Environment Diagnostics** - Detailed logging of Swagger scripts and DOM elements
+- **🛡️ DOM Fallback Method** - Manual DOM manipulation when API access fails
+- **⏱️ Extended Retry Logic** - 30 attempts over 15 seconds for slower environments
+
+### 🔧 Technical Improvements
+- **Smart UI Detection**:
+  ```javascript
+  // Multiple detection patterns
+  if (window.ui && typeof window.ui.preauthorizeApiKey === 'function') {
+      uiObject = window.ui;
+  } else if (window.swaggerUi && typeof window.swaggerUi.preauthorizeApiKey === 'function') {
+      uiObject = window.swaggerUi;
+  } else {
+      // Dynamic scanning for any Swagger UI instances
+      const possibleUIs = Object.keys(window).filter(key => 
+          key.toLowerCase().includes('swagger') || key.toLowerCase().includes('ui')
+      );
+  }
+  ```
+- **DOM Fallback Strategy**:
+  ```javascript
+  // Direct DOM manipulation as last resort
+  const authInput = document.querySelector('input[placeholder*="Bearer"]');
+  if (authInput) {
+      authInput.value = `Bearer ${token}`;
+      authInput.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+  ```
+- **Enhanced Debugging**: Comprehensive environment diagnostics and fallback reporting
+
+### 🎯 What This Solves
+- **Universal Compatibility**: Works with different Swagger UI versions and configurations
+- **Custom Implementations**: Handles non-standard Swagger UI setups
+- **Diagnostic Information**: Clear troubleshooting data for development environments
+- **Graceful Degradation**: Multiple fallback methods ensure functionality
+
+### 💡 Debugging Output
+Now provides detailed diagnostic information:
+```
+🔎 Scanning for Swagger UI objects...
+window.ui: undefined
+window.swaggerUi: undefined  
+window.SwaggerUIBundle: function
+📄 Swagger scripts found: 2
+🎨 Swagger DOM elements found: 5
+🔍 Possible UI objects: ['SwaggerUIBundle', 'ui']
+```
+
+### 🔄 Backward Compatibility
+- **100% Compatible**: All existing functionality preserved
+- **Enhanced Detection**: Better detection doesn't break existing setups
+- **Zero Breaking Changes**: Pure improvement release
+
 ## [1.3.5] - 2025-08-31
 
 ### 🔧 **Swagger UI Loading Fix** - Enhanced Error Handling
