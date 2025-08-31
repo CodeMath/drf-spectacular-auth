@@ -5,6 +5,76 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.9] - 2025-08-31
+
+### 🎯 **Two-Stage Modal Authorization** - Complete Flow Automation  
+
+**Critical fix**: Proper 2-stage authorization flow for DRF Spectacular's modal-based authentication system.
+
+### ✨ Two-Stage Automation Features
+- **🔘 Stage 1: Main Button Click** - Automatically clicks main `.auth-wrapper .btn.authorize.unlocked` to open modal
+- **📱 Stage 2: Modal Automation** - Fills token in `input[aria-label="auth-bearer-value"]` and clicks modal authorize button
+- **⏱️ Smart Modal Timing** - 600ms wait for modal rendering + 300ms for form processing
+- **🎯 Precise Selectors** - Uses exact selectors from your DRF Spectacular implementation
+- **🔄 Modal State Detection** - Checks if modal is already open before triggering main button
+
+### 🔧 Technical Implementation
+- **Two-Stage Flow**:
+  ```javascript
+  // Stage 1: Open modal
+  const mainAuthorizeBtn = document.querySelector('.auth-wrapper .btn.authorize.unlocked');
+  mainAuthorizeBtn.click();
+  
+  // Stage 2: Fill and submit (after 600ms delay)
+  setTimeout(() => {
+      const modalInput = document.querySelector('input[aria-label="auth-bearer-value"]');
+      modalInput.value = `Bearer ${token}`;
+      
+      setTimeout(() => {
+          const modalBtn = document.querySelector('.btn.modal-btn.auth.authorize');
+          modalBtn.click();
+      }, 300);
+  }, 600);
+  ```
+
+### 🎯 Complete Authorization Sequence  
+1. **Login Success** → Token extracted ✅
+2. **Modal Detection** → Check if modal already open ✅
+3. **Main Button Click** → **Stage 1: Open authorization modal** 🆕
+4. **Modal Wait** → Wait 600ms for modal to fully render 🆕  
+5. **Token Input** → Fill `input[aria-label="auth-bearer-value"]` ✅
+6. **Modal Submit** → Click `.btn.modal-btn.auth.authorize` ✅
+7. **Authentication Applied** → Modal closes, API calls authenticated ✅
+
+### 🚀 What This Fixes
+Based on your exact HTML structure:
+- **Main Button**: `.auth-wrapper .btn.authorize.unlocked` → Opens modal
+- **Modal Input**: `input[aria-label="auth-bearer-value"]` → Token input field  
+- **Modal Button**: `.btn.modal-btn.auth.authorize[aria-label="Apply credentials"]` → Final submit
+
+### 💡 Enhanced Debug Output
+```javascript
+🔘 Found main Authorize button, clicking to open modal...
+⏳ Waiting for authorization modal to open...
+🎯 Found modal input field, setting token...
+✅ Token set in opened modal
+🔘 Auto-clicking Authorize button inside modal
+✅ Final authorization completed - modal should close
+```
+
+### 🔄 Fallback Strategies
+- **Existing Modal**: Detects and uses already-open modals
+- **Alternative Selectors**: Multiple fallback patterns for different UI states
+- **Smart Detection**: Checks modal state before triggering main button
+
+### 🎉 True One-Click Experience
+Now handles the complete DRF Spectacular authorization flow:
+1. **User**: Clicks login in auth panel
+2. **Auto**: Main authorize button clicked (opens modal)
+3. **Auto**: Token filled in modal input field  
+4. **Auto**: Modal authorize button clicked (submits form)
+5. **Result**: Fully authenticated API access
+
 ## [1.3.8] - 2025-08-31
 
 ### 🎯 **Complete Auto-Authorization** - One-Click Authentication Flow

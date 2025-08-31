@@ -479,36 +479,102 @@
                 // Last resort: try to manually set authorization header in the DOM
                 console.log('❌ No suitable Swagger UI object found, trying DOM manipulation...');
                 
-                // Method 1: Try to find and fill authorization input fields
+                // CRITICAL: First check if modal is already open, if not, open it first
+                const existingModal = document.querySelector('.modal-ux, .dialog-ux');
+                const existingInput = document.querySelector('input[aria-label="auth-bearer-value"]');
+                
+                if (existingInput && existingModal) {
+                    // Modal is already open, proceed with token input
+                    console.log('📱 Modal already open, setting token directly');
+                    existingInput.value = `Bearer ${token}`;
+                    existingInput.dispatchEvent(new Event('input', { bubbles: true }));
+                    existingInput.dispatchEvent(new Event('change', { bubbles: true }));
+                    console.log('✅ Token set in existing modal');
+                    
+                    // Auto-click the authorize button in the modal
+                    setTimeout(() => {
+                        const authorizeBtn = document.querySelector('.btn.modal-btn.auth.authorize, button[aria-label="Apply credentials"]');
+                        if (authorizeBtn) {
+                            console.log('🔘 Auto-clicking Authorize button in existing modal');
+                            authorizeBtn.click();
+                            console.log('✅ Authorization completed in existing modal');
+                        }
+                    }, 200);
+                    
+                    updateAuthorizationModal(token);
+                    return;
+                }
+                
+                // Step 1: Find and click the main authorize button to open modal
+                const mainAuthorizeBtn = document.querySelector('.auth-wrapper .btn.authorize, button[class*="authorize"]:not(.modal-btn), .btn.authorize.unlocked');
+                if (mainAuthorizeBtn) {
+                    console.log('🔘 Found main Authorize button, clicking to open modal...');
+                    mainAuthorizeBtn.click();
+                    
+                    // Step 2: Wait for modal to open, then fill token and submit
+                    setTimeout(() => {
+                        console.log('⏳ Waiting for authorization modal to open...');
+                        
+                        // Look for the specific input in the opened modal
+                        const modalInput = document.querySelector('input[aria-label="auth-bearer-value"], input[type="text"]:not([style*="display: none"])');
+                        if (modalInput) {
+                            console.log('🎯 Found modal input field, setting token...');
+                            modalInput.value = `Bearer ${token}`;
+                            modalInput.dispatchEvent(new Event('input', { bubbles: true }));
+                            modalInput.dispatchEvent(new Event('change', { bubbles: true }));
+                            console.log('✅ Token set in opened modal');
+                            
+                            // Step 3: Auto-click the authorize button inside the modal
+                            setTimeout(() => {
+                                const modalAuthorizeBtn = document.querySelector('.btn.modal-btn.auth.authorize, button[aria-label="Apply credentials"], .auth-btn-wrapper button[type="submit"]');
+                                if (modalAuthorizeBtn) {
+                                    console.log('🔘 Auto-clicking Authorize button inside modal');
+                                    modalAuthorizeBtn.click();
+                                    console.log('✅ Final authorization completed - modal should close');
+                                    updateAuthorizationModal(token);
+                                } else {
+                                    console.log('⚠️ Modal Authorize button not found');
+                                }
+                            }, 300);
+                            
+                        } else {
+                            console.log('❌ Modal input field not found after clicking main button');
+                        }
+                    }, 600); // Give more time for modal to fully render
+                    
+                    return; // Exit here since we're handling the flow
+                }
+                
+                // Fallback: Try to find any auth input fields if modal is somehow open
+                console.log('🔍 Fallback: Searching for any auth input fields...');
                 const authInputSelectors = [
+                    'input[aria-label="auth-bearer-value"]', // Most specific
                     'input[placeholder*="Bearer"]',
                     'input[placeholder*="bearer"]', 
                     'input[name*="Authorization"]',
                     'input[name*="authorization"]',
                     'input[id*="auth"]',
                     'input[class*="auth"]',
-                    'input[type="text"]', // Fallback to any text input in auth context
+                    'input[type="text"]', // Fallback
                     'textarea[placeholder*="Bearer"]'
                 ];
                 
                 for (const selector of authInputSelectors) {
                     const authInput = document.querySelector(selector);
                     if (authInput) {
-                        console.log(`🎯 Found auth input with selector: ${selector}`);
+                        console.log(`🎯 Found auth input with fallback selector: ${selector}`);
                         authInput.value = `Bearer ${token}`;
                         authInput.dispatchEvent(new Event('input', { bubbles: true }));
                         authInput.dispatchEvent(new Event('change', { bubbles: true }));
-                        console.log('✅ Token set via DOM input field');
+                        console.log('✅ Token set via fallback selector');
                         
-                        // Auto-click the authorize button in the modal
+                        // Auto-click nearby authorize button
                         setTimeout(() => {
-                            const authorizeBtn = document.querySelector('.btn.modal-btn.auth.authorize, button[aria-label="Apply credentials"], .auth-btn-wrapper button[type="submit"]');
-                            if (authorizeBtn) {
-                                console.log('🔘 Auto-clicking Authorize button in modal');
-                                authorizeBtn.click();
-                                console.log('✅ Authorize button clicked - authentication should be applied');
-                            } else {
-                                console.log('⚠️ Authorize button not found in modal');
+                            const nearbyBtn = authInput.closest('form, .auth-container, .modal-ux-content')?.querySelector('.btn.modal-btn.auth.authorize, button[type="submit"], button[aria-label="Apply credentials"]');
+                            if (nearbyBtn) {
+                                console.log('🔘 Auto-clicking nearby authorize button');
+                                nearbyBtn.click();
+                                console.log('✅ Nearby authorize button clicked');
                             }
                         }, 200);
                         
