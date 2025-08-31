@@ -87,14 +87,11 @@
     function storeToken(token) {
         const storage = getStorage();
         storage.setItem('drf_auth_access_token', token);
-        console.log(`🔒 Token stored in ${CONFIG.tokenStorage}:`, token ? 'YES' : 'NO');
     }
 
     function getStoredToken() {
         const storage = getStorage();
-        const token = storage.getItem('drf_auth_access_token');
-        console.log(`🔍 Token retrieved from ${CONFIG.tokenStorage}:`, token ? 'YES' : 'NO');
-        return token;
+        return storage.getItem('drf_auth_access_token');
     }
 
     function storeUserInfo(userInfo) {
@@ -124,21 +121,18 @@
                 for (const schemeName of commonSchemes) {
                     try {
                         window.ui.preauthorizeApiKey(schemeName, token);
-                        console.log(`✅ Swagger authorization set with scheme: ${schemeName}`);
+                        // Successfully set authorization
                         return true;
                     } catch (e) {
                         // Try next scheme
                     }
                 }
                 
-                console.log('⚠️ Could not find compatible auth scheme, but token is available for manual copy');
                 return false;
             } catch (error) {
-                console.log('⚠️ Swagger UI not ready for authorization:', error.message);
                 return false;
             }
         } else {
-            console.log('⚠️ Swagger UI not available - token stored for manual copy');
             return false;
         }
     }
@@ -173,14 +167,12 @@
             if (copyTokenBtn && CONFIG.showCopyButton) {
                 copyTokenBtn.style.display = 'inline-block';
             }
-            console.log('✅ UI updated for authenticated state');
         } else {
             if (authIndicator) authIndicator.classList.remove('authenticated');
             if (authText) authText.textContent = getMessage('unauthenticated');
             if (loginForm) loginForm.style.display = 'flex';
             if (logoutBtn) logoutBtn.style.display = 'none';
             if (copyTokenBtn) copyTokenBtn.style.display = 'none';
-            console.log('✅ UI updated for unauthenticated state');
         }
     }
 
@@ -239,14 +231,8 @@
                 
                 // Simple auto-authorization
                 if (CONFIG.autoAuthorize) {
-                    console.log('🎯 AUTO_AUTHORIZE enabled - attempting to set Swagger authorization');
                     setTimeout(() => {
-                        const success = setSwaggerAuthorization(data.access_token);
-                        if (success) {
-                            console.log('✅ Swagger UI auto-authorization successful');
-                        } else {
-                            console.log('📋 Auto-authorization not available - use Copy Token button');
-                        }
+                        setSwaggerAuthorization(data.access_token);
                     }, 1000);
                 }
                 
@@ -258,8 +244,7 @@
                 showMessage(data.error || getMessage('loginFailed'), true);
             }
         })
-        .catch(error => {
-            console.error('Login error:', error);
+        .catch(() => {
             showMessage(getMessage('networkError'), true);
         })
         .finally(() => {
@@ -289,9 +274,8 @@
             updateAuthStatus(false);
             showMessage(getMessage('logoutSuccess'));
         })
-        .catch(error => {
-            console.error('Logout error:', error);
-            // Still clear local state even if server request fails
+        .catch(() => {
+            // Clear local state even if server request fails
             clearStoredAuth();
             clearSwaggerAuthorization();
             updateAuthStatus(false);
@@ -319,11 +303,8 @@
                     copyBtn.textContent = originalText;
                 }, 2000);
             }
-        }).catch(function(err) {
-            console.error('Could not copy text:', err);
+        }).catch(function() {
             showMessage(getMessage('tokenCopyFailed'), true);
-            
-            // Show manual copy modal
             showManualCopyModal(token);
         });
     }
@@ -331,76 +312,66 @@
     // Manual copy modal
     function showManualCopyModal(token) {
         const modal = document.createElement('div');
-        modal.className = 'auth-modal-overlay';
+        modal.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 10000; display: flex;
+            align-items: center; justify-content: center;
+        `;
+        
         modal.innerHTML = `
-            <div class="auth-modal">
-                <div class="auth-modal-header">
-                    <h3>${getMessage('manualCopyTitle')}</h3>
-                </div>
-                <div class="auth-modal-content">
-                    <p>${getMessage('manualCopyDesc')}</p>
-                    <textarea readonly class="token-textarea" onclick="this.select()">${token}</textarea>
-                </div>
-                <div class="auth-modal-footer">
-                    <button class="btn btn-secondary" onclick="this.closest('.auth-modal-overlay').remove()">
-                        ${getMessage('close')}
-                    </button>
-                </div>
+            <div style="background: white; padding: 20px; border-radius: 8px; max-width: 500px; width: 90%;">
+                <h3 style="margin: 0 0 15px 0;">${getMessage('manualCopyTitle')}</h3>
+                <p style="margin: 0 0 15px 0;">${getMessage('manualCopyDesc')}</p>
+                <textarea readonly onclick="this.select()" 
+                    style="width: 100%; height: 100px; margin-bottom: 15px; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">${token}</textarea>
+                <button onclick="this.closest('div').parentElement.remove()" 
+                    style="padding: 8px 16px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                    ${getMessage('close')}
+                </button>
             </div>
         `;
         
         document.body.appendChild(modal);
-        modal.querySelector('.token-textarea').select();
+        modal.querySelector('textarea').select();
+        
+        // Close on backdrop click
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.remove();
+        });
     }
 
     // Initialize
     function init() {
-        console.log('🚀 Auth panel initializing...');
-        console.log('📋 CONFIG:', {
-            tokenStorage: CONFIG.tokenStorage,
-            autoAuthorize: CONFIG.autoAuthorize,
-            showCopyButton: CONFIG.showCopyButton
-        });
-        
         // Set up event listeners
         const loginForm = document.querySelector('#drf-login-form');
         if (loginForm) {
             loginForm.addEventListener('submit', handleLogin);
-            console.log('✅ Login form event listener attached');
-        } else {
-            console.log('❌ Login form not found');
         }
 
         const logoutBtn = document.querySelector('#drf-logout-btn');
         if (logoutBtn) {
             logoutBtn.addEventListener('click', handleLogout);
-            console.log('✅ Logout button event listener attached');
         }
 
         const copyTokenBtn = document.querySelector('#drf-copy-token-btn');
         if (copyTokenBtn && CONFIG.showCopyButton) {
             copyTokenBtn.addEventListener('click', handleCopyToken);
-            console.log('✅ Copy token button event listener attached');
         }
 
         // Check for existing authentication
-        console.log('🔄 Checking for existing authentication...');
         const token = getStoredToken();
         const userInfo = getStoredUserInfo();
 
         if (token && userInfo) {
-            console.log('✅ Found existing authentication, restoring login state');
             updateAuthStatus(true, userInfo.email);
             
             // Try auto-authorization if enabled
             if (CONFIG.autoAuthorize) {
-                console.log('🎯 Auto-authorize enabled, setting Swagger authorization');
                 setTimeout(() => {
                     setSwaggerAuthorization(token);
                 }, 500);
             }
         } else {
-            console.log('❌ No existing authentication found');
             updateAuthStatus(false);
         }
     }
