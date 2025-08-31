@@ -87,11 +87,14 @@
     function storeToken(token) {
         const storage = getStorage();
         storage.setItem('drf_auth_access_token', token);
+        console.log(`🔒 Token stored in ${CONFIG.tokenStorage}:`, token ? 'YES' : 'NO');
     }
 
     function getStoredToken() {
         const storage = getStorage();
-        return storage.getItem('drf_auth_access_token');
+        const token = storage.getItem('drf_auth_access_token');
+        console.log(`🔍 Token retrieved from ${CONFIG.tokenStorage}:`, token ? 'YES' : 'NO');
+        return token;
     }
 
     function storeUserInfo(userInfo) {
@@ -350,6 +353,13 @@
 
     // Initialize
     function init() {
+        console.log('🚀 Auth panel initializing...');
+        console.log('📋 CONFIG:', {
+            tokenStorage: CONFIG.tokenStorage,
+            autoAuthorize: CONFIG.autoAuthorize,
+            showCopyButton: CONFIG.showCopyButton
+        });
+        
         // Set up event listeners
         const loginForm = document.querySelector('#login-form');
         if (loginForm) {
@@ -367,19 +377,23 @@
         }
 
         // Check for existing authentication
+        console.log('🔄 Checking for existing authentication...');
         const token = getStoredToken();
         const userInfo = getStoredUserInfo();
 
         if (token && userInfo) {
+            console.log('✅ Found existing authentication, restoring login state');
             updateAuthStatus(true, userInfo.email);
             
             // Try auto-authorization if enabled
             if (CONFIG.autoAuthorize) {
+                console.log('🎯 Auto-authorize enabled, setting Swagger authorization');
                 setTimeout(() => {
                     setSwaggerAuthorization(token);
                 }, 500);
             }
         } else {
+            console.log('❌ No existing authentication found');
             updateAuthStatus(false);
         }
     }

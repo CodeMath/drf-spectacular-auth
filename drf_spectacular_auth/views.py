@@ -144,10 +144,6 @@ def login_view(request):
 
         logger.info(f"Successful login for user: {credentials.get('email')}")
 
-        # Store token in session for middleware-based auth
-        request.session["spectacular_auth_token"] = auth_result["access_token"]
-        request.session["spectacular_user_email"] = credentials.get("email")
-
         # Create response with simple JSON data
         return Response(
             LoginResponseSerializer(auth_result).data, status=status.HTTP_200_OK
@@ -184,11 +180,8 @@ def logout_view(request):
         # Call pre-logout hook if configured
         _call_hook("PRE_LOGOUT", request, {})
 
-        # Clear session data
-        if "spectacular_auth_token" in request.session:
-            del request.session["spectacular_auth_token"]
-        if "spectacular_user_email" in request.session:
-            del request.session["spectacular_user_email"]
+        # Session cleanup no longer needed for sessionStorage approach
+        pass
 
         # Call post-logout hook if configured
         _call_hook("POST_LOGOUT", request, {})
