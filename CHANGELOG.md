@@ -5,6 +5,52 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.3] - 2025-08-30
+
+### 🔍 **Enhanced Debugging & Diagnostics** - AUTO_AUTHORIZE Troubleshooting
+
+**Improvements**: Comprehensive debugging logs added to diagnose AUTO_AUTHORIZE issues in production environments.
+
+### ✨ New Features
+- **📊 Startup Configuration Logging** - Display full CONFIG object on page load
+- **🔍 Detailed Login Flow Tracking** - Step-by-step AUTO_AUTHORIZE execution logging
+- **❌ Enhanced Error Diagnostics** - Detailed error messages for missing tokens and failed authorization
+- **🎯 Token Validation Logging** - Clear indication of expected vs received token fields
+
+### 🔧 Technical Improvements
+- **CONFIG Validation**: Log CONFIG object at startup for verification
+- **Login Success Debugging**: 
+  - Check AUTO_AUTHORIZE and HttpOnly Cookie settings
+  - Display login response data structure
+  - Show token availability and expected fields
+- **Token Flow Tracking**: 
+  - Log whether swagger_token or access_token is expected
+  - Display available data keys when token is missing
+- **Error Reporting**: Enhanced error messages with actionable debugging information
+
+### 📊 Debug Output Examples
+```javascript
+🔧 DRF-SPECTACULAR-AUTH CONFIG: { autoAuthorize: true, useHttpOnlyCookie: true, ... }
+🔍 LOGIN SUCCESS - Starting AUTO_AUTHORIZE check
+✅ AUTO_AUTHORIZE is enabled
+Token for Swagger: EXISTS/MISSING
+Expected token field: swagger_token (HttpOnly mode)
+🚀 Calling setSwaggerAuthorization with token
+```
+
+### 🐛 Bug Fixes
+- **Console Logging**: Fixed issues where setSwaggerAuthorization wasn't being called
+- **Token Detection**: Improved detection of missing tokens in different modes
+- **Error Clarity**: Better error messages for troubleshooting authentication flow
+
+### 📚 Documentation
+- **Debugging Guide**: Added comprehensive debugging steps in console logs
+- **Token Flow**: Clearer indication of token expectations based on mode
+
+### 🔄 Backward Compatibility
+- **100% Compatible**: All debugging is console-only, no breaking changes
+- **Production Safe**: Debug logs can be left in production for diagnostics
+
 ## [1.3.2] - 2025-08-30
 
 ### 🎯 **Dynamic Security Scheme Detection** - Universal Compatibility

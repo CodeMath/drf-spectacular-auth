@@ -14,6 +14,9 @@
         useHttpOnlyCookie: {{ auth_settings.USE_HTTPONLY_COOKIE|yesno:"true,false" }},
         theme: {{ theme|safe }}
     };
+    
+    // Debug: Log CONFIG at startup
+    console.log('🔧 DRF-SPECTACULAR-AUTH CONFIG:', CONFIG);
 
     // Localized messages
     const MESSAGES = {
@@ -162,6 +165,7 @@
             });
             
             const data = await response.json();
+            console.log('Login response:', data);
             
             if (response.ok) {
                 // HttpOnly cookies are set by server automatically
@@ -178,21 +182,46 @@
                 document.getElementById('drf-login-form').reset();
                 
                 // Auto-authorize Swagger UI if enabled
+                console.log('🔍 LOGIN SUCCESS - Starting AUTO_AUTHORIZE check');
+                console.log('CONFIG.autoAuthorize:', CONFIG.autoAuthorize);
+                console.log('CONFIG.useHttpOnlyCookie:', CONFIG.useHttpOnlyCookie);
+                console.log('Login response data:', data);
+                
                 if (CONFIG.autoAuthorize) {
+                    console.log('✅ AUTO_AUTHORIZE is enabled');
+                    
                     // Use swagger_token for HttpOnly cookie mode, access_token for storage mode
                     const tokenForSwagger = CONFIG.useHttpOnlyCookie ? 
                         data.swagger_token : data.access_token;
                     
+                    console.log('Token for Swagger:', tokenForSwagger ? 'EXISTS' : 'MISSING');
+                    console.log('Expected token field:', CONFIG.useHttpOnlyCookie ? 'swagger_token' : 'access_token');
+                    
                     if (tokenForSwagger) {
+                        console.log('🚀 Calling setSwaggerAuthorization with token');
                         setSwaggerAuthorization(tokenForSwagger);
                         
                         // Security: Clear swagger_token from memory after use (HttpOnly mode)
                         if (CONFIG.useHttpOnlyCookie && data.swagger_token) {
+                            console.log('🧹 Clearing swagger_token from memory');
                             delete data.swagger_token;
                         }
+                    } else {
+                        console.error('❌ NO TOKEN AVAILABLE for AUTO_AUTHORIZE');
+                        console.error('Available data keys:', Object.keys(data));
+                        if (CONFIG.useHttpOnlyCookie) {
+                            console.error('Expected: data.swagger_token (HttpOnly mode)');
+                        } else {
+                            console.error('Expected: data.access_token (storage mode)');
+                        }
                     }
+                } else {
+                    console.log('❌ AUTO_AUTHORIZE is disabled in CONFIG');
                 }
             } else {
+                console.error('❌ LOGIN FAILED');
+                console.error('Response status:', response.status);
+                console.error('Response data:', data);
                 showMessage(data.error || getMessage('loginFailed'), 'error');
             }
             
@@ -338,6 +367,9 @@
     // Set Swagger authorization with dynamic scheme detection
     function setSwaggerAuthorization(token) {
         const checkUI = () => {
+            console.log('Checking UI');
+            console.log('window.ui', window.ui);
+            console.log('window.ui.preauthorizeApiKey', window.ui.preauthorizeApiKey);
             if (window.ui && window.ui.preauthorizeApiKey) {
                 const schemeName = detectBearerScheme();
                 if (schemeName) {
