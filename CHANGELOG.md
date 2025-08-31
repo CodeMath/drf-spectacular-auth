@@ -5,6 +5,63 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.7] - 2025-08-31
+
+### 🎯 **Advanced DOM Authorization** - DRF Spectacular Compatibility
+
+**Critical enhancement**: Advanced DOM manipulation and authorization strategies specifically for DRF Spectacular environments.
+
+### ✨ Advanced Features
+- **🎯 Smart Input Detection** - Multiple selector patterns for authorization inputs
+- **🔧 DRF Spectacular Integration** - Specialized handling for DRF's Swagger UI setup
+- **📱 Modal Authorization** - Automatic detection and handling of authorization modals
+- **🔍 Pattern Matching** - Intelligent input field detection by placeholder, name, id, class
+- **🔘 Auto-Click Authorization** - Automatically triggers authorize buttons when possible
+
+### 🔧 Technical Improvements
+- **Comprehensive Input Detection**:
+  ```javascript
+  const authInputSelectors = [
+      'input[placeholder*="Bearer"]',
+      'input[name*="Authorization"]', 
+      'input[id*="auth"]',
+      'input[class*="auth"]',
+      'input[type="text"]', // Fallback
+      'textarea[placeholder*="Bearer"]'
+  ];
+  ```
+- **Modal Handling Strategy**:
+  ```javascript
+  // Wait and detect opened modals
+  setTimeout(() => {
+      const modalInputs = document.querySelectorAll('input[type="text"]:not([style*="display: none"])');
+      if (modalInputs.length > 0) {
+          modalInputs[0].value = `Bearer ${token}`;
+          modalInputs[0].dispatchEvent(new Event('input', { bubbles: true }));
+      }
+  }, 500);
+  ```
+- **Enhanced DOM Element Detection**: SwaggerUI container detection with instance access
+- **Automatic Button Triggering**: Clicks authorize buttons to open authentication modals
+
+### 🎯 What This Solves
+- **DRF Spectacular Compatibility**: Works with DRF's specific Swagger UI implementation
+- **SwaggerUIBundle Integration**: Handles cases where only SwaggerUIBundle is available
+- **Modal Authorization**: Automatically fills and submits authorization modals
+- **Fallback Strategies**: Multiple DOM manipulation approaches for edge cases
+
+### 💡 Enhanced Flow
+1. **Standard Detection**: Check for window.ui, window.swaggerUi
+2. **Bundle Detection**: Access SwaggerUIBundle and search DOM containers  
+3. **DOM Manipulation**: Direct input field detection and filling
+4. **Modal Handling**: Automatic modal detection and form completion
+5. **Pattern Matching**: Intelligent field matching by multiple attributes
+
+### 🔄 Backward Compatibility
+- **100% Compatible**: All previous functionality maintained
+- **Progressive Enhancement**: Adds new capabilities without breaking existing flows
+- **Zero Breaking Changes**: Pure enhancement release
+
 ## [1.3.6] - 2025-08-31
 
 ### 🔧 **Enhanced Swagger UI Detection** - Multi-Pattern Access & DOM Fallback

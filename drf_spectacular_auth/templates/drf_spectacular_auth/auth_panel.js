@@ -401,18 +401,52 @@
                     console.log('✅ Found window.swaggerUi with preauthorizeApiKey');
                 } else if (window.SwaggerUIBundle) {
                     console.log('⚠️ Found SwaggerUIBundle but no direct preauthorizeApiKey access');
-                    // Try to find any UI instance
-                    const possibleUIs = Object.keys(window).filter(key => 
-                        key.toLowerCase().includes('swagger') || 
-                        key.toLowerCase().includes('ui')
-                    );
-                    console.log('🔍 Possible UI objects:', possibleUIs);
                     
-                    for (const key of possibleUIs) {
-                        if (window[key] && typeof window[key].preauthorizeApiKey === 'function') {
-                            uiObject = window[key];
-                            console.log(`✅ Found ${key} with preauthorizeApiKey`);
-                            break;
+                    // Method 1: Try to find existing UI instance in DOM
+                    const swaggerContainer = document.querySelector('#swagger-ui, .swagger-ui, [class*="swagger"]');
+                    if (swaggerContainer && swaggerContainer.swaggerUIInstance) {
+                        console.log('✅ Found SwaggerUI instance in DOM container');
+                        uiObject = swaggerContainer.swaggerUIInstance;
+                    } else {
+                        // Method 2: Try to access global UI instance that might be stored elsewhere
+                        const possibleUIs = Object.keys(window).filter(key => 
+                            key.toLowerCase().includes('swagger') || 
+                            key.toLowerCase().includes('ui')
+                        );
+                        console.log('🔍 Possible UI objects:', possibleUIs);
+                        
+                        for (const key of possibleUIs) {
+                            if (window[key] && typeof window[key].preauthorizeApiKey === 'function') {
+                                uiObject = window[key];
+                                console.log(`✅ Found ${key} with preauthorizeApiKey`);
+                                break;
+                            }
+                        }
+                        
+                        // Method 3: Try to create or access UI through SwaggerUIBundle
+                        if (!uiObject && typeof window.SwaggerUIBundle === 'function') {
+                            console.log('🔧 Attempting to access UI through SwaggerUIBundle...');
+                            
+                            // Look for existing swagger instances in common patterns
+                            const commonSelectors = [
+                                '#swagger-ui',
+                                '.swagger-ui', 
+                                '[id*="swagger"]',
+                                '.swagger-wrapper'
+                            ];
+                            
+                            for (const selector of commonSelectors) {
+                                const element = document.querySelector(selector);
+                                if (element) {
+                                    console.log(`📍 Found swagger element: ${selector}`);
+                                    // Try to access the UI instance that might be attached to the element
+                                    if (element._swaggerUIInstance || element.ui) {
+                                        uiObject = element._swaggerUIInstance || element.ui;
+                                        console.log('✅ Found UI instance attached to DOM element');
+                                        break;
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -444,20 +478,112 @@
                 
                 // Last resort: try to manually set authorization header in the DOM
                 console.log('❌ No suitable Swagger UI object found, trying DOM manipulation...');
-                const authInput = document.querySelector('input[placeholder*="Bearer"], input[name*="Authorization"], input[id*="auth"]');
-                if (authInput) {
-                    authInput.value = `Bearer ${token}`;
-                    authInput.dispatchEvent(new Event('input', { bubbles: true }));
-                    console.log('✅ Token set via DOM input field');
-                    updateAuthorizationModal(token);
-                    return;
+                
+                // Method 1: Try to find and fill authorization input fields
+                const authInputSelectors = [
+                    'input[placeholder*="Bearer"]',
+                    'input[placeholder*="bearer"]', 
+                    'input[name*="Authorization"]',
+                    'input[name*="authorization"]',
+                    'input[id*="auth"]',
+                    'input[class*="auth"]',
+                    'input[type="text"]', // Fallback to any text input in auth context
+                    'textarea[placeholder*="Bearer"]'
+                ];
+                
+                for (const selector of authInputSelectors) {
+                    const authInput = document.querySelector(selector);
+                    if (authInput) {
+                        console.log(`🎯 Found auth input with selector: ${selector}`);
+                        authInput.value = `Bearer ${token}`;
+                        authInput.dispatchEvent(new Event('input', { bubbles: true }));
+                        authInput.dispatchEvent(new Event('change', { bubbles: true }));
+                        console.log('✅ Token set via DOM input field');
+                        updateAuthorizationModal(token);
+                        return;
+                    }
                 }
                 
-                // Try to find authorize button and trigger it
-                const authorizeBtn = document.querySelector('button[class*="authorize"], button[id*="authorize"], .btn-authorize');
+                // Method 2: Try to use DRF Spectacular specific approach
+                console.log('🔧 Trying DRF Spectacular specific authorization...');
+                
+                // Wait a bit more and try to trigger authorization through different methods
+                setTimeout(() => {
+                    // Look for authorization modal or popup
+                    const authModal = document.querySelector('.auth-wrapper, .authorization__wrapper, [class*="auth-container"]');
+                    if (authModal) {
+                        console.log('📱 Found authorization modal');
+                        const modalInput = authModal.querySelector('input[type="text"], input[type="password"], textarea');
+                        if (modalInput) {
+                            modalInput.value = `Bearer ${token}`;
+                            modalInput.dispatchEvent(new Event('input', { bubbles: true }));
+                            console.log('✅ Token set in authorization modal');
+                            
+                            // Try to find and click authorize/login button in modal
+                            const modalBtn = authModal.querySelector('button[class*="authorize"], button[class*="auth"], .btn-auth');
+                            if (modalBtn) {
+                                modalBtn.click();
+                                console.log('🔘 Clicked authorization button in modal');
+                            }
+                            return;
+                        }
+                    }
+                    
+                    // Try global document approach
+                    const allInputs = document.querySelectorAll('input[type="text"], textarea');
+                    console.log(`🔍 Found ${allInputs.length} text inputs, searching for auth-related ones...`);
+                    
+                    for (const input of allInputs) {
+                        const placeholder = input.placeholder?.toLowerCase() || '';
+                        const name = input.name?.toLowerCase() || '';
+                        const id = input.id?.toLowerCase() || '';
+                        const className = input.className?.toLowerCase() || '';
+                        
+                        if (placeholder.includes('token') || placeholder.includes('bearer') || placeholder.includes('auth') ||
+                            name.includes('token') || name.includes('bearer') || name.includes('auth') ||
+                            id.includes('token') || id.includes('bearer') || id.includes('auth') ||
+                            className.includes('token') || className.includes('bearer') || className.includes('auth')) {
+                            
+                            console.log('🎯 Found potential auth input:', {
+                                placeholder: input.placeholder,
+                                name: input.name,
+                                id: input.id,
+                                className: input.className
+                            });
+                            
+                            input.value = `Bearer ${token}`;
+                            input.dispatchEvent(new Event('input', { bubbles: true }));
+                            input.dispatchEvent(new Event('change', { bubbles: true }));
+                            console.log('✅ Token set via pattern matching');
+                            return;
+                        }
+                    }
+                }, 1000);
+                
+                // Try to find authorize button and show helpful info
+                const authorizeBtn = document.querySelector('button[class*="authorize"], button[id*="authorize"], .btn-authorize, button[class*="auth"]');
                 if (authorizeBtn) {
                     console.log('🔘 Found authorize button, manual authorization may be needed');
                     console.log('💡 Token available for manual entry:', token.substring(0, 20) + '...');
+                    
+                    // Try to click the authorize button to open the modal
+                    try {
+                        authorizeBtn.click();
+                        console.log('🔘 Clicked authorize button to open modal');
+                        
+                        // Wait and try to fill the opened modal
+                        setTimeout(() => {
+                            const modalInputs = document.querySelectorAll('input[type="text"]:not([style*="display: none"]), textarea:not([style*="display: none"])');
+                            if (modalInputs.length > 0) {
+                                console.log(`📝 Found ${modalInputs.length} visible inputs after clicking authorize`);
+                                modalInputs[0].value = `Bearer ${token}`;
+                                modalInputs[0].dispatchEvent(new Event('input', { bubbles: true }));
+                                console.log('✅ Token set in opened authorization modal');
+                            }
+                        }, 500);
+                    } catch (e) {
+                        console.log('❌ Failed to click authorize button:', e.message);
+                    }
                 }
                 
                 console.log('❌ No suitable Swagger UI object found');
