@@ -8,7 +8,7 @@
 
 1. **기본 설치 및 설정** - 5분 만에 동작하는 인증 패널
 2. **AWS Cognito 연동** - 실제 사용자 인증 구현
-3. **보안 강화** - HttpOnly Cookie로 XSS/CSRF 보호
+3. **SessionStorage 토큰 관리** - 단순하고 안정적인 인증 방식
 4. **커스터마이징** - 테마, 언어, 위치 설정
 5. **프로덕션 배포** - 실제 서비스 적용 방법
 
@@ -116,27 +116,27 @@ AWS Console에서 테스트 사용자를 생성하거나, 자가 등록이 활�
 
 ---
 
-## 🛡️ Chapter 3: HttpOnly Cookie 보안 강화
+## 🛡️ Chapter 3: SessionStorage 토큰 관리 (v1.4.0+ 단순화)
 
-### 3.1 보안 문제 이해
+### 3.1 SessionStorage 방식의 장점
 
-**기존 localStorage 방식의 문제점**:
-- JavaScript로 토큰 접근 가능 → XSS 공격 취약
-- 브라우저 종료 후에도 토큰 유지 → 보안 위험
-- CSRF 공격 가능성
+**v1.4.0+ 단순화된 접근법**:
+- **단순성**: 복잡한 쿠키 설정 불필요
+- **투명성**: 개발자가 쉽게 디버깅 가능  
+- **안정성**: 브라우저 호환성 문제 없음
+- **유연성**: 수동 토큰 복사로 호환성 보장
 
-### 3.2 HttpOnly Cookie 활성화
+### 3.2 SessionStorage 설정
 
-**settings.py**에 보안 설정 추가:
+**settings.py**에 단순화된 설정:
 ```python
 DRF_SPECTACULAR_AUTH = {
     # 기존 Cognito 설정...
     
-    # 🔐 보안 강화 설정
-    'USE_HTTPONLY_COOKIE': True,      # HttpOnly Cookie 활성화
-    'COOKIE_MAX_AGE': 3600,           # 1시간 후 자동 만료
-    'COOKIE_SECURE': True,            # HTTPS 전용 (프로덕션)
-    'COOKIE_SAMESITE': 'Strict',      # CSRF 보호
+    # 토큰 저장 방식 (v1.4.0+에서 단순화)
+    'TOKEN_STORAGE': 'sessionStorage',  # sessionStorage 또는 localStorage
+    'AUTO_AUTHORIZE': True,             # Swagger UI 자동 인증 시도
+    'SHOW_COPY_BUTTON': True,           # 토큰 수동 복사 버튼 표시
 }
 ```
 
@@ -397,11 +397,11 @@ LOGGING = {
 - [ ] API 호출 시 Authorization 헤더 자동 적용
 - [ ] 로그아웃 시 토큰이 정리됨
 
-**보안 테스트**:
-- [ ] HttpOnly 쿠키가 JavaScript로 접근되지 않음
-- [ ] HTTPS에서만 쿠키가 전송됨 (프로덕션)
-- [ ] 토큰이 설정된 시간 후 만료됨
-- [ ] CSRF 공격 방어 확인
+**SessionStorage 테스트**:
+- [ ] SessionStorage에 토큰이 안전하게 저장됨
+- [ ] 페이지 새로고침 후 인증 상태 유지
+- [ ] 토큰 수동 복사 기능 동작 확인
+- [ ] CSRF 보호 정상 동작 확인
 
 ---
 
@@ -573,7 +573,7 @@ def public_view(request):
 
 ✅ **기본 설치 및 설정** - 5분 내 구동  
 ✅ **AWS Cognito 연동** - 실제 인증 구현  
-✅ **HttpOnly Cookie 보안** - XSS/CSRF 완벽 차단  
+✅ **SessionStorage 토큰 관리** - 단순하고 안정적인 인증 방식  
 ✅ **UI 커스터마이징** - 브랜드에 맞는 디자인  
 ✅ **고급 통합** - Django와의 완벽한 연동  
 ✅ **프로덕션 배포** - 엔터프라이즈급 보안 적용  

@@ -1,42 +1,45 @@
 # DRF Spectacular Auth
 
-🔐 **Authentication UI for DRF Spectacular with AWS Cognito support**
+🔐 **Simple Authentication UI for DRF Spectacular with AWS Cognito support**
 
 [![PyPI version](https://badge.fury.io/py/drf-spectacular-auth.svg)](https://badge.fury.io/py/drf-spectacular-auth)
 [![Python](https://img.shields.io/pypi/pyversions/drf-spectacular-auth.svg)](https://pypi.org/project/drf-spectacular-auth/)
 [![Django](https://img.shields.io/badge/django-3.2%2B-blue.svg)](https://www.djangoproject.com/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
-A Django package that adds a beautiful authentication panel to your DRF Spectacular (Swagger UI) documentation, with built-in support for AWS Cognito and extensible authentication providers.
+A Django package that adds a clean, simple authentication panel to your DRF Spectacular (Swagger UI) documentation, with built-in support for AWS Cognito and sessionStorage token management.
 
-## 🆕 What's New in v1.3.1
+## 🆕 What's New in v1.4.2
 
-- 🎯 **HttpOnly Cookie + AUTO_AUTHORIZE** - Automatic Swagger UI authorization now works with HttpOnly cookies
-- 🔒 **Smart Token Management** - One-time token exposure for Swagger UI setup with immediate cleanup
-- ⚡ **Seamless UX** - Login → Auto-authorized Swagger UI (no manual token copying needed)
-- 🏗️ **Industry-Standard Pattern** - Based on Azure API Management and enterprise solutions
-- 🔄 **Full Compatibility** - Works with HttpOnly cookies, localStorage, and sessionStorage modes
+- 🐛 **Fixed Login Form Issue** - Resolved page refresh bug, now properly uses AJAX
+- 🎯 **Fixed Element Selectors** - Corrected HTML/JS ID mismatches for proper event handling
+- 🔄 **Fixed Authentication Persistence** - Login state now properly persists across page refreshes
+- 🧹 **Code Cleanup** - Removed 30% of JavaScript code while maintaining all functionality
+- ⚡ **Performance Improvements** - Faster initialization, cleaner console output
+- 🛠️ **Better UX** - Smooth authentication flow without unexpected page refreshes
 
-## 📈 Previous Updates (v1.3.0)
+## 📈 v1.4.0 - Strategic Simplification
 
-- 🔐 **HttpOnly Cookie Security** - Enhanced XSS protection with secure token storage
-- 🛡️ **90%+ Security Improvement** - CSRF protection with SameSite cookies
-- 🔄 **Backward Compatibility** - Seamless upgrade with fallback to localStorage/sessionStorage
-- 🧹 **Code Optimization** - Improved imports, cleaner structure, removed cache files
-- 📚 **Migration Guide** - Complete HttpOnly Cookie migration documentation
-- 🔧 **Enhanced Middleware** - Better cookie-based authentication handling
+**Major Change**: Complete rollback from complex HttpOnly cookie approach to simple, reliable sessionStorage + token copy method.
+
+**Why the change?**
+- **Simplicity > Complexity**: The cookie approach created maintenance burden and compatibility issues
+- **Better Reliability**: SessionStorage approach works consistently across all environments
+- **Easier Troubleshooting**: Transparent token management that developers can understand and debug
+- **Production Ready**: Focus on stability and maintainability over complex features
 
 ## ✨ Features
 
-- 🔐 **Enhanced Security**: HttpOnly cookies with XSS and CSRF protection
-- 🎨 **Beautiful UI**: Clean, modern authentication panel that integrates seamlessly with Swagger UI
+- 🔐 **Simple & Secure**: SessionStorage-based token management with CSRF protection
+- 🎨 **Clean UI**: Modern authentication panel that integrates seamlessly with Swagger UI  
 - 🛡️ **AWS Cognito Support**: Built-in integration with AWS Cognito User Pools
-- 📋 **Smart Token Management**: Secure cookie-based with localStorage fallback
-- 🎯 **Auto Authorization**: Automatically populates Swagger UI authorization headers
+- 📋 **Smart Token Management**: Client-side sessionStorage with manual token copy option
+- 🎯 **Auto Authorization**: Automatically attempts to populate Swagger UI authorization headers
 - 🎨 **Customizable**: Flexible theming and positioning options
 - 🌍 **i18n Ready**: Multi-language support (Korean, English, Japanese)
 - 🔧 **Extensible**: Plugin system for additional authentication providers
 - 📦 **Easy Integration**: Minimal setup with sensible defaults
+- ⚡ **Production Ready**: Stable, maintainable codebase focused on reliability
 
 ## 🚀 Quick Start
 
@@ -77,12 +80,19 @@ MIDDLEWARE = [
 ]
 
 DRF_SPECTACULAR_AUTH = {
+    # AWS Cognito Settings
     'COGNITO_REGION': 'your-aws-region',
     'COGNITO_CLIENT_ID': 'your-cognito-client-id',
     'COGNITO_CLIENT_SECRET': 'your-client-secret',  # Private client인 경우에만 필요
     
+    # Token Storage (Simplified in v1.4.0+)
+    'TOKEN_STORAGE': 'sessionStorage',  # or 'localStorage'
+    'AUTO_AUTHORIZE': True,  # Attempt automatic Swagger UI authorization
+    'SHOW_COPY_BUTTON': True,  # Show manual token copy button
+    
     # Optional: User management settings
-    'AUTO_CREATE_USERS': True,  # Auto-create users from Cognito
+    'AUTO_CREATE_USERS': False,  # Auto-create users from Cognito
+    'CREATE_TEMP_USER': True,   # Create temporary users for documentation access
     'REQUIRE_AUTHENTICATION': False,  # Require auth to access Swagger UI
 }
 ```
@@ -132,11 +142,10 @@ This package offers multiple integration strategies to suit different use cases:
 - Minimal configuration required
 - Good for basic documentation with optional authentication
 
-**2. HttpOnly Cookie Integration (Recommended)**
-- Secure HttpOnly cookie-based token storage  
-- XSS attack protection
-- Automatic authentication handling
-- CSRF protection with SameSite cookies
+**2. SessionStorage Integration (Recommended)**
+- Simple and reliable sessionStorage-based token storage  
+- Transparent authentication handling
+- Manual token copy option for compatibility
 
 **3. Middleware Integration**
 - Session-based auth persistence
@@ -199,7 +208,7 @@ DRF_SPECTACULAR_AUTH = {
     # UI Settings
     'PANEL_POSITION': 'top-right',  # top-left, top-right, bottom-left, bottom-right
     'PANEL_STYLE': 'floating',      # floating, embedded
-    'AUTO_AUTHORIZE': True,         # Auto-fill authorization headers (v1.3.1: Works with HttpOnly cookies!)
+    'AUTO_AUTHORIZE': True,         # Auto-fill authorization headers
     'SHOW_COPY_BUTTON': True,       # Show token copy button
     'SHOW_USER_INFO': True,         # Show user email in panel
     
@@ -217,12 +226,8 @@ DRF_SPECTACULAR_AUTH = {
     'DEFAULT_LANGUAGE': 'ko',
     'SUPPORTED_LANGUAGES': ['ko', 'en', 'ja'],
     
-    # Security (Enhanced)
-    'USE_HTTPONLY_COOKIE': True,      # HttpOnly cookie storage (Recommended)
-    'TOKEN_STORAGE': 'sessionStorage', # localStorage, sessionStorage (Fallback)
-    'COOKIE_MAX_AGE': 3600,           # Cookie expiry in seconds (1 hour)
-    'COOKIE_SECURE': True,            # HTTPS only (set False for development)
-    'COOKIE_SAMESITE': 'Strict',      # CSRF protection
+    # Token Storage (Simplified in v1.4.0+)
+    'TOKEN_STORAGE': 'sessionStorage', # sessionStorage or localStorage
     'CSRF_PROTECTION': True,
     
     # User Management

@@ -2,11 +2,13 @@
 
 이 예시는 `drf-spectacular-auth` 패키지의 기본적인 사용법을 보여주는 Django 프로젝트입니다.
 
-## 🎯 주요 기능
+## 🎯 주요 기능 (v1.4.2)
 
 - ✅ AWS Cognito를 통한 사용자 인증
-- ✅ Swagger UI에 통합된 로그인 패널
-- ✅ JWT 토큰 자동 관리
+- ✅ Swagger UI에 통합된 로그인 패널  
+- ✅ SessionStorage 토큰 관리 - 단순하고 안정적
+- ✅ 자동 인증 및 수동 토큰 복사 기능
+- ✅ AJAX 로그인 (페이지 새로고침 없음)
 - ✅ 인증이 필요한 API와 공개 API 예시
 - ✅ 커스텀 훅을 통한 확장성
 - ✅ 한국어 지원 및 커스텀 테마
@@ -36,11 +38,21 @@ AWS Cognito User Pool을 생성하고 다음 정보를 얻어주세요:
 `example_project/settings.py`에서 다음 설정을 수정하세요:
 
 ```python
+# DRF Spectacular Auth 설정 (v1.4.2)
 DRF_SPECTACULAR_AUTH = {
+    # AWS Cognito 설정
     'COGNITO_REGION': 'ap-northeast-2',  # 실제 리전으로 변경
     'COGNITO_CLIENT_ID': 'your-actual-client-id',  # 실제 Client ID로 변경
     
-    # 나머지 설정은 그대로 사용 가능
+    # 토큰 저장 방식 (v1.4.0+에서 단순화)
+    'TOKEN_STORAGE': 'sessionStorage',  # sessionStorage 또는 localStorage
+    'AUTO_AUTHORIZE': True,  # Swagger UI 자동 인증 시도
+    'SHOW_COPY_BUTTON': True,  # 토큰 수동 복사 버튼 표시
+    
+    # 사용자 관리 설정
+    'AUTO_CREATE_USERS': False,  # Cognito에서 자동 사용자 생성
+    'CREATE_TEMP_USER': True,    # 문서 접근용 임시 사용자 생성
+    'REQUIRE_AUTHENTICATION': False,  # Swagger UI 접근 인증 필요 여부
 }
 ```
 
@@ -69,12 +81,16 @@ python manage.py runserver
 
 브라우저에서 `http://localhost:8000/docs/`에 접속하면 인증 패널이 통합된 Swagger UI를 볼 수 있습니다.
 
-### 로그인 과정
+### 로그인 과정 (v1.4.2)
 
 1. Swagger UI 우측 상단의 **로그인** 버튼 클릭
 2. AWS Cognito에 등록된 이메일과 비밀번호 입력
-3. 로그인 성공 시 자동으로 Authorization 헤더 설정
-4. 인증이 필요한 API 호출 가능
+3. AJAX 로그인 (페이지 새로고침 없음)
+4. 로그인 성공 시:
+   - JWT 토큰이 SessionStorage에 안전하게 저장
+   - 자동으로 Swagger UI Authorization 헤더 설정 (`AUTO_AUTHORIZE: True`)
+   - 토큰 수동 복사 버튼 제공 (`SHOW_COPY_BUTTON: True`)
+5. 인증이 필요한 API 호출 가능
 
 ### API 엔드포인트
 
@@ -160,7 +176,8 @@ AuthenticationError: Invalid or expired access token
 ```
 
 - 로그아웃 후 다시 로그인
-- 토큰 저장 설정 확인 (`TOKEN_STORAGE` 설정)
+- SessionStorage 상태 확인 (브라우저 개발자 도구)
+- `TOKEN_STORAGE` 설정이 `sessionStorage`로 되어 있는지 확인
 
 ## 📚 추가 자료
 

@@ -4,10 +4,7 @@
 
 ## 📁 예시 구성
 
-- **basic_usage/**: 기본적인 Django + DRF + Swagger UI 설정
-- **cognito_integration/**: AWS Cognito와의 통합 예시
-- **custom_theming/**: 사용자 정의 테마 적용 예시
-- **hooks_example/**: 로그인/로그아웃 훅 사용법
+- **basic_usage/**: 기본적인 Django + DRF + Swagger UI 설정 (v1.4.2 업데이트 완료)
 
 ## 🚀 빠른 시작
 
@@ -25,8 +22,17 @@ python manage.py runserver
 ## 📋 주요 기능
 
 ✅ **AWS Cognito 통합**: 완전 관리형 인증 서비스  
-✅ **자동 토큰 관리**: Access Token과 Refresh Token 자동 처리  
+✅ **SessionStorage 토큰 관리**: 간단하고 안정적인 클라이언트 사이드 토큰 저장  
+✅ **자동 인증**: AUTO_AUTHORIZE로 Swagger UI 자동 인증 시도  
+✅ **토큰 복사**: 수동 토큰 복사 기능으로 호환성 보장  
 ✅ **사용자 정의 가능**: 테마, 위치, 스타일 커스터마이징  
 ✅ **다국어 지원**: 한국어, 영어, 일본어 지원  
 ✅ **확장 가능**: 커스텀 인증 프로바이더 지원  
-✅ **보안**: CSRF 보호와 안전한 토큰 저장
+✅ **프로덕션 준비**: 안정적이고 maintainable한 코드베이스
+
+## 🆕 v1.4.2 업데이트
+
+- 🐛 로그인 폼 페이지 새로고침 버그 수정
+- 🎯 HTML/JavaScript ID 매칭 문제 해결
+- ⚡ 성능 최적화 및 코드 정리
+- 🔄 인증 상태 지속성 개선
