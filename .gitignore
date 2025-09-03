@@ -68,3 +68,7 @@ htmlcov/
 
 # Documentation
 docs/_build/
+
+# Personal/Private files
+LINKEDIN_POST*.md
+ARCHITECTURE_DECISION.md
