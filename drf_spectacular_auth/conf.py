@@ -7,18 +7,15 @@ DEFAULTS = {
     "COGNITO_REGION": "us-east-1",
     "COGNITO_CLIENT_ID": None,  # Required
     "COGNITO_CLIENT_SECRET": None,  # Optional - for private clients only
-    
     # API Endpoints
     "LOGIN_ENDPOINT": "/api/auth/login/",
     "LOGOUT_ENDPOINT": "/api/auth/logout/",
-    
     # UI Settings
     "PANEL_POSITION": "top-right",  # top-left, top-right, bottom-left, bottom-right
     "PANEL_STYLE": "floating",  # floating, embedded
     "AUTO_AUTHORIZE": True,  # Auto-fill authorization headers (basic preauthorizeApiKey)
     "SHOW_COPY_BUTTON": True,  # Show token copy button
     "SHOW_USER_INFO": True,  # Show user email in panel
-    
     # Theming
     "THEME": {
         "PRIMARY_COLOR": "#61affe",
@@ -31,20 +28,16 @@ DEFAULTS = {
             '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif'
         ),
     },
-    
     # Localization
     "DEFAULT_LANGUAGE": "en",
     "SUPPORTED_LANGUAGES": ["ko", "en", "ja"],
-    
     # Token Storage (Simplified)
     "TOKEN_STORAGE": "sessionStorage",  # localStorage or sessionStorage
     "CSRF_PROTECTION": True,
-    
     # User Management
     "AUTO_CREATE_USERS": False,  # Auto-create users from successful authentication
     "CREATE_TEMP_USER": True,  # Create temporary users for documentation access
     "REQUIRE_AUTHENTICATION": False,  # Require auth to access Swagger UI
-    
     # Extensibility
     "CUSTOM_AUTH_PROVIDERS": [],
     "CUSTOM_TEMPLATES": {},

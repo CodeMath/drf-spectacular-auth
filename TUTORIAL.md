@@ -8,7 +8,7 @@
 
 1. **기본 설치 및 설정** - 5분 만에 동작하는 인증 패널
 2. **AWS Cognito 연동** - 실제 사용자 인증 구현
-3. **SessionStorage 토큰 관리** - 단순하고 안정적인 인증 방식
+3. **SessionStorage 토큰 관리 (v1.4.2)** - 단순하고 안정적인 인증 방식
 4. **커스터마이징** - 테마, 언어, 위치 설정
 5. **프로덕션 배포** - 실제 서비스 적용 방법
 
@@ -140,21 +140,12 @@ DRF_SPECTACULAR_AUTH = {
 }
 ```
 
-### 3.3 개발 환경 설정
-
-**개발 환경**에서는 HTTP를 사용하므로:
-```python
-# settings.py 또는 settings_dev.py
-if DEBUG:
-    DRF_SPECTACULAR_AUTH['COOKIE_SECURE'] = False  # HTTP 허용
-```
-
-### 3.4 보안 향상 확인
+### 3.3 토큰 관리 검증 방법
 
 **브라우저 개발자 도구에서 확인**:
-1. Network 탭에서 쿠키 설정 확인
-2. Console에서 `document.cookie` 실행 → 토큰이 보이지 않음 (✅ 정상)
-3. Application 탭 → Cookies에서 `HttpOnly` 플래그 확인
+1. 로그인 후 F12 → Application 탭 → Session Storage 확인
+2. drf-spectacular-auth 관련 토큰 저장 확인  
+3. 페이지 새로고침 후 인증 상태 유지 확인
 
 ---
 
@@ -281,16 +272,14 @@ DRF_SPECTACULAR_AUTH = {
 DRF_SPECTACULAR_AUTH = {
     # 기존 설정...
     
-    # 🔒 프로덕션 보안 강화
-    'USE_HTTPONLY_COOKIE': True,
-    'COOKIE_SECURE': True,            # HTTPS 필수
-    'COOKIE_SAMESITE': 'Strict',      # 최고 보안
-    'COOKIE_MAX_AGE': 1800,           # 30분 (더 짧은 만료시간)
-    'CSRF_PROTECTION': True,
+    # 🔒 프로덕션 보안 강화 (v1.4.2)
+    'TOKEN_STORAGE': 'sessionStorage',  # 안전한 토큰 저장
+    'CSRF_PROTECTION': True,            # CSRF 보호
+    'AUTO_AUTHORIZE': True,             # 자동 인증
     
     # UI 설정
-    'SHOW_COPY_BUTTON': False,        # 프로덕션에서는 복사 버튼 숨김
-    'REQUIRE_AUTHENTICATION': True,   # 인증 필수
+    'SHOW_COPY_BUTTON': True,           # 토큰 복사 버튼
+    'REQUIRE_AUTHENTICATION': True,     # 인증 필수
 }
 ```
 
@@ -304,8 +293,10 @@ DRF_SPECTACULAR_AUTH = {
     'COGNITO_CLIENT_ID': os.getenv('COGNITO_CLIENT_ID'),
     'COGNITO_CLIENT_SECRET': os.getenv('COGNITO_CLIENT_SECRET'),
     
-    'COOKIE_SECURE': not DEBUG,  # DEBUG 모드가 아니면 HTTPS 필수
-    'USE_HTTPONLY_COOKIE': True,
+    # v1.4.2 단순화된 설정
+    'TOKEN_STORAGE': 'sessionStorage',
+    'AUTO_AUTHORIZE': True,
+    'CSRF_PROTECTION': True,
 }
 ```
 
@@ -355,18 +346,18 @@ CSP_STYLE_SRC = ("'self'", "'unsafe-inline'")
 2. CORS 설정 확인 (`CORS_ALLOW_CREDENTIALS = True`)
 3. 쿠키 설정이 도메인과 맞는지 확인
 
-#### 문제: 개발 환경에서 쿠키가 설정되지 않음
+#### 문제: 토큰이 저장되지 않음
 **해결책**:
 ```python
-if DEBUG:
-    DRF_SPECTACULAR_AUTH['COOKIE_SECURE'] = False
+# SessionStorage 확인 (브라우저 개발자 도구)
+# Application → Session Storage → drf-spectacular-auth 항목 확인
 ```
 
 ### 7.2 디버깅 도구
 
 **브라우저 개발자 도구 활용**:
 1. **Network 탭**: HTTP 요청/응답 확인
-2. **Application 탭**: 쿠키 설정 상태 확인
+2. **Application 탭**: Session Storage 토큰 저장 상태 확인
 3. **Console 탭**: JavaScript 오류 확인
 
 **Django 로깅 설정**:
@@ -492,12 +483,11 @@ DRF_SPECTACULAR_AUTH = {
     'COGNITO_REGION': 'us-east-1',
     'COGNITO_CLIENT_ID': 'your-dev-client-id',
     
-    # 개발 환경 설정
-    'USE_HTTPONLY_COOKIE': True,
-    'COOKIE_SECURE': False,  # HTTP 허용
-    'COOKIE_MAX_AGE': 3600,
+    # 개발 환경 설정 (v1.4.2)
+    'TOKEN_STORAGE': 'sessionStorage',
     'AUTO_AUTHORIZE': True,
     'SHOW_COPY_BUTTON': True,
+    'CSRF_PROTECTION': True,
     
     'THEME': {
         'PRIMARY_COLOR': '#007bff',
@@ -520,13 +510,12 @@ DRF_SPECTACULAR_AUTH = {
     'COGNITO_CLIENT_ID': os.getenv('COGNITO_CLIENT_ID'),
     'COGNITO_CLIENT_SECRET': os.getenv('COGNITO_CLIENT_SECRET'),
     
-    # 프로덕션 보안 설정
-    'USE_HTTPONLY_COOKIE': True,
-    'COOKIE_SECURE': True,
-    'COOKIE_SAMESITE': 'Strict',
-    'COOKIE_MAX_AGE': 1800,  # 30분
+    # 프로덕션 보안 설정 (v1.4.2)
+    'TOKEN_STORAGE': 'sessionStorage',
+    'AUTO_AUTHORIZE': True,
+    'CSRF_PROTECTION': True,
     'REQUIRE_AUTHENTICATION': True,
-    'SHOW_COPY_BUTTON': False,
+    'SHOW_COPY_BUTTON': True,
 }
 
 # HTTPS 강제

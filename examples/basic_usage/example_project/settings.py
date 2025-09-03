@@ -143,16 +143,13 @@ DRF_SPECTACULAR_AUTH = {
     "COGNITO_CLIENT_SECRET": os.getenv(
         "COGNITO_CLIENT_SECRET"
     ),  # Private client인 경우에만 설정
-    
     # 토큰 저장 방식 (v1.4.0+에서 단순화)
     "TOKEN_STORAGE": "sessionStorage",  # sessionStorage 또는 localStorage
     "AUTO_AUTHORIZE": True,  # Swagger UI 자동 인증 시도
     "SHOW_COPY_BUTTON": True,  # 토큰 수동 복사 버튼 표시
-    
     # UI 설정
     "PANEL_POSITION": "top-right",  # 인증 패널 위치
     "PANEL_STYLE": "floating",  # 패널 스타일
-    
     # 테마 설정
     "THEME": {
         "PRIMARY_COLOR": "#1976d2",  # 머티리얼 블루
@@ -163,19 +160,15 @@ DRF_SPECTACULAR_AUTH = {
         "SHADOW": "0 4px 20px rgba(25,118,210,0.15)",
         "FONT_FAMILY": '"Noto Sans KR", "Apple SD Gothic Neo", sans-serif',
     },
-    
     # 현지화 설정
     "DEFAULT_LANGUAGE": "ko",  # 기본 언어를 한국어로 설정
     "SUPPORTED_LANGUAGES": ["ko", "en", "ja"],
-    
     # 사용자 관리 설정
     "AUTO_CREATE_USERS": False,  # Cognito에서 자동 사용자 생성
-    "CREATE_TEMP_USER": True,    # 문서 접근용 임시 사용자 생성
+    "CREATE_TEMP_USER": True,  # 문서 접근용 임시 사용자 생성
     "REQUIRE_AUTHENTICATION": False,  # Swagger UI 접근 인증 필요 여부
-    
     # CSRF 보호
     "CSRF_PROTECTION": True,
-    
     # 확장성 설정
     "HOOKS": {
         "PRE_LOGIN": "example_project.hooks.pre_login_hook",
