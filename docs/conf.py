@@ -5,7 +5,6 @@
 
 import os
 import sys
-import django
 
 # -- Path setup --------------------------------------------------------------
 
@@ -14,9 +13,9 @@ import django
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.insert(0, os.path.abspath('..'))
 
-# Django setup for autodoc
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tests.settings')
-django.setup()
+# Django setup for autodoc - disabled for now to avoid missing settings.py
+# os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'tests.settings')
+# django.setup()
 
 # -- Project information -----------------------------------------------------
 
@@ -49,7 +48,7 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # The suffix(es) of source filenames.
 source_suffix = {
     '.rst': None,
-    '.md': 'myst_parser',
+    '.md': None,
 }
 
 # The master document (index file)
@@ -120,8 +119,7 @@ autodoc_default_options = {
 # Intersphinx configuration
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3/', None),
-    'django': ('https://docs.djangoproject.com/en/stable/', 'https://docs.djangoproject.com/en/stable/_objects/'),
-    'drf': ('https://www.django-rest-framework.org/', None),
+    'django': ('https://docs.djangoproject.com/en/5.2/', None),
     'boto3': ('https://boto3.amazonaws.com/v1/documentation/api/latest/', None),
 }
 
