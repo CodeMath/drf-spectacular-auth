@@ -3,6 +3,7 @@
 🔐 **Simple Authentication UI for DRF Spectacular with AWS Cognito support**
 
 [![PyPI version](https://badge.fury.io/py/drf-spectacular-auth.svg)](https://badge.fury.io/py/drf-spectacular-auth)
+[![PyPI Downloads](https://static.pepy.tech/personalized-badge/drf-spectacular-auth?period=total&units=INTERNATIONAL_SYSTEM&left_color=GRAY&right_color=GREEN&left_text=Downloads)](https://pepy.tech/projects/drf-spectacular-auth)
 [![Python](https://img.shields.io/pypi/pyversions/drf-spectacular-auth.svg)](https://pypi.org/project/drf-spectacular-auth/)
 [![Django](https://img.shields.io/badge/django-3.2%2B-blue.svg)](https://www.djangoproject.com/)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
